@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  Alert,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import {View, Text, TextInput, Button, Alert, StyleSheet,
+  ScrollView, TouchableOpacity} from 'react-native';
 import { db } from '../../firebase/config';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useRoute, RouteProp } from '@react-navigation/native';
@@ -68,7 +60,7 @@ const handleSubmit = async () => {
 
     Alert.alert('Form submitted and slot booked successfully!');
     
-    // Optionally reset form
+    // reset form
     setName('');
     setAge('');
     setGender('');
@@ -105,9 +97,6 @@ const handleSubmit = async () => {
           <Text style={value === 'no' ? styles.selectedButtonText : styles.buttonText}>No</Text>
         </TouchableOpacity>
       </View>
-
-      
-      
     </View>
   );
 
@@ -134,7 +123,6 @@ const handleSubmit = async () => {
             </TouchableOpacity>
         </View>
         </View>
- 
   );
 
   return (

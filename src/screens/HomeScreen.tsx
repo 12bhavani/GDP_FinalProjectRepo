@@ -27,10 +27,10 @@ const HomeScreen = () => {
     <View style={styles.container}>
     
 
-      <Text style={styles.title}>Welcome to the Home Page!</Text>
+      <Text style={styles.title}>Welcome to Home Page!</Text>
       
       <TouchableOpacity style={styles.button} onPress={goToCalendar}>
-        <Text style={styles.buttonText}>Go to Calendar</Text>
+        <Text style={styles.buttonText}>Schedule an appointment</Text>
       </TouchableOpacity>
     </View>
   );

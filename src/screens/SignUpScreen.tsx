@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { db } from '../../firebase/config'; // Make sure this is correctly configured
+import { db } from '../../firebase/config'; 
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

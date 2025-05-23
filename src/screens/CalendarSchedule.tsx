@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { db } from '../../firebase/config';
 import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
@@ -9,11 +9,11 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation'; 
 
-type LoginScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+type CalendarScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Calendar'>;
 
 
 export default function CalendarScreen() {
-    const navigation = useNavigation<LoginScreenNavProp>();
+    const navigation = useNavigation<CalendarScreenNavProp>();
 
   const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -88,6 +88,7 @@ export default function CalendarScreen() {
 
 const handleSlotPress = async (slot: string) => {
   const user = auth().currentUser;
+
   if (!user || !selectedDate) {
     Alert.alert('You must be logged in to book a slot.');
     return;
@@ -100,7 +101,7 @@ const handleSlotPress = async (slot: string) => {
 };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Book an Appointment</Text>
 
       <Calendar
@@ -128,7 +129,7 @@ const handleSlotPress = async (slot: string) => {
           )}
         </>
       )}
-    </ScrollView>
+    </View>
   );
 }
 

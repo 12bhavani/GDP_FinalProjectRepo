@@ -1,25 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  FlatList,
-} from 'react-native';
+import {View, Text, StyleSheet, ActivityIndicator, TextInput,
+  TouchableOpacity, Alert, FlatList} from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { db } from '../../firebase/config';
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc,
-  collection,
-  getDocs,
-  setDoc,
-} from 'firebase/firestore';
+import {doc, getDoc, updateDoc, deleteDoc, collection, getDocs} from 'firebase/firestore';
 
 const ProfileScreen = () => {
   const user = auth().currentUser;
