@@ -1,9 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { db } from '../../firebase/config';
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
+import Header from '../components/Header';
+
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import moment from 'moment';
 
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,9 +22,8 @@ import { RootStackParamList } from '../types/navigation';
 
 type CalendarScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Calendar'>;
 
-
 export default function CalendarScreen() {
-    const navigation = useNavigation<CalendarScreenNavProp>();
+  const navigation = useNavigation<CalendarScreenNavProp>();
 
   const [markedDates, setMarkedDates] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -21,13 +31,24 @@ export default function CalendarScreen() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingCalendar, setLoadingCalendar] = useState(true);
 
-  // Fetch all dates and mark based on slot availability
+  const today = moment().format('YYYY-MM-DD');
+
+  const isPastSlot = (date: string, time: string) => {
+    const now = moment();
+    const slotDateTime = moment(`${date} ${time}`, 'YYYY-MM-DD hh:mm A');
+    return slotDateTime.isBefore(now);
+  };
+
   useEffect(() => {
     const fetchMarkedDates = async () => {
       const snapshot = await getDocs(collection(db, 'slots'));
       const marks: Record<string, any> = {};
+      const today = moment();
 
       snapshot.forEach(docSnap => {
+        const dateId = docSnap.id;
+        if (moment(dateId).isBefore(today, 'day')) return;
+
         const data = docSnap.data();
         const values = Object.values(data).filter(v => typeof v === 'string' && !v.includes('@'));
         const booked = values.filter(v => v === 'booked').length;
@@ -37,7 +58,7 @@ export default function CalendarScreen() {
         if (booked === 0) color = 'green';
         else if (booked === total) color = 'red';
 
-        marks[docSnap.id] = {
+        marks[dateId] = {
           customStyles: {
             container: { backgroundColor: color },
             text: { color: 'white', fontWeight: 'normal' },
@@ -52,14 +73,9 @@ export default function CalendarScreen() {
     fetchMarkedDates();
   }, []);
 
-  // Handle day selection
   const onDayPress = async (day: any) => {
-    if (!day || !day.dateString) {
-    console.warn('Invalid day pressed:', day);
-    return;
-  }
+    if (!day?.dateString) return;
     const dateStr = day.dateString;
-
     setSelectedDate(dateStr);
     setLoadingSlots(true);
 
@@ -70,10 +86,10 @@ export default function CalendarScreen() {
         const filtered: Record<string, 'available' | 'booked'> = {};
 
         Object.entries(data).forEach(([key, value]) => {
-        if (!key.endsWith('_user') && (value === 'available' || value === 'booked')) {
+          if (!key.endsWith('_user') && (value === 'available' || value === 'booked')) {
             filtered[key] = value;
-        }
-    });
+          }
+        });
 
         setSlots(filtered);
       } else {
@@ -84,59 +100,76 @@ export default function CalendarScreen() {
     }
 
     setLoadingSlots(false);
-  };    
+  };
 
-const handleSlotPress = async (slot: string) => {
-  const user = auth().currentUser;
+  const handleSlotPress = (slot: string) => {
+    const user = auth().currentUser;
+    if (!user || !selectedDate) {
+      Alert.alert('You must be logged in to book a slot.');
+      return;
+    }
 
-  if (!user || !selectedDate) {
-    Alert.alert('You must be logged in to book a slot.');
-    return;
-  }
-
-  navigation.navigate('Form', {
-    date: selectedDate,
-    slot: slot,
-  });
-};
+    navigation.navigate('Form', { date: selectedDate, slot });
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Book an Appointment</Text>
+    <View style={{ flex: 1, backgroundColor: '#F5F5F5' }}>
+      <Header title="Schedule an Appointment" /> 
 
-      <Calendar
-        markingType="custom"
-        markedDates={markedDates}
-        onDayPress={onDayPress}
-      />
+      <ScrollView contentContainerStyle={styles.container}>
+       
 
-      {selectedDate && (
-        <>
-          <Text style={styles.subtitle}>Available Slots for {selectedDate}:</Text>
+        <Calendar
+          markingType="custom"
+          markedDates={markedDates}
+          onDayPress={onDayPress}
+          minDate={today}
+        />
 
-          {loadingSlots ? (
-            <ActivityIndicator style={{ marginTop: 20 }} />
-          ) : Object.keys(slots).length > 0 ? (
-            Object.entries(slots).map(([slot, status]) =>
-              status === 'available' ? (
-                <Button key={slot} title={`Book ${slot}`} onPress={() => handleSlotPress(slot)} />
-              ) : (
-                <Text key={slot} style={{ color: 'grey', marginTop: 10 }}>{slot} - Booked</Text>
-              )
-            )
-          ) : (
-            <Text style={styles.noSlots}>No slots found for this date.</Text>
-          )}
-        </>
-      )}
+        {selectedDate && (
+          <>
+            <Text style={styles.subtitle}>Available Slots for {selectedDate}:</Text>
+
+            {loadingSlots ? (
+              <ActivityIndicator style={{ marginTop: 20 }} />
+            ) : Object.keys(slots).length > 0 ? (
+              Object.entries(slots).map(([slot, status]) => {
+                if (isPastSlot(selectedDate, slot)) {
+                  return (
+                    <Text key={slot} style={{ color: 'grey', marginTop: 10 }}>
+                      {slot} - Past slot
+                    </Text>
+                  );
+                }
+
+                if (status === 'available') {
+                  return (
+                    <Button key={slot} title={`Book ${slot}`} onPress={() => handleSlotPress(slot)} />
+                  );
+                } else {
+                  return (
+                    <Text key={slot} style={{ color: 'grey', marginTop: 10 }}>
+                      {slot} - Booked
+                    </Text>
+                  );
+                }
+              })
+            ) : (
+              <Text style={styles.noSlots}>No slots found for this date.</Text>
+            )}
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 40,
+    backgroundColor: '#F5F5F5',
   },
   title: {
     fontSize: 22,

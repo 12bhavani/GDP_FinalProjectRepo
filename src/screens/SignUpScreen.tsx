@@ -6,13 +6,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
-import { db } from '../../firebase/config'; 
+import { db } from '../../firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import Header from '../components/Header'; 
 
 type LoginScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -30,6 +32,11 @@ const SignUpScreen: React.FC = () => {
       return;
     }
 
+    if (phone.length !== 10) {
+      Alert.alert('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
     try {
       const userCredential = await auth().createUserWithEmailAndPassword(email, password);
       const { uid } = userCredential.user;
@@ -40,6 +47,7 @@ const SignUpScreen: React.FC = () => {
         name,
         email,
         phone,
+        role: 'student',
         createdAt: new Date().toISOString(),
       });
 
@@ -54,51 +62,67 @@ const SignUpScreen: React.FC = () => {
     }
   };
 
+  // Phone number input handler to accept only 10 digits
+  const handlePhoneChange = (text: string) => {
+    const formattedPhone = text.replace(/[^0-9]/g, ''); 
+    if (formattedPhone.length <= 10) {
+      setPhone(formattedPhone); 
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.signup}>Sign Up</Text>
-      <TextInput
-        placeholder="Full Name"
-        style={styles.inputBox}
-        value={name}
-        onChangeText={setName}
-      />
-      <TextInput
-        placeholder="Email"
-        style={styles.inputBox}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        placeholder="Phone Number"
-        style={styles.inputBox}
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
-      <TextInput
-        placeholder="Password"
-        style={styles.inputBox}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity onPress={onRegister} style={styles.register}>
-        <Text style={styles.registerTitle}>Register</Text>
-      </TouchableOpacity>
-    </View>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <Header title="Sign Up" /> 
+
+      <View style={styles.container}>
+        <TextInput
+          placeholder="Full Name"
+          style={styles.inputBox}
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          placeholder="Email"
+          style={styles.inputBox}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          placeholder="Phone Number"
+          style={styles.inputBox}
+          value={phone}
+          onChangeText={handlePhoneChange}
+          keyboardType="phone-pad"
+          maxLength={10} 
+        />
+        <TextInput
+          placeholder="Password"
+          style={styles.inputBox}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        <TouchableOpacity onPress={onRegister} style={styles.register}>
+          <Text style={styles.registerTitle}>Register</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
+export default SignUpScreen;
+
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     padding: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    height: '100%',
-    backgroundColor: '#fff',
   },
   inputBox: {
     borderWidth: 1,
@@ -111,7 +135,7 @@ const styles = StyleSheet.create({
   },
   register: {
     width: '90%',
-    backgroundColor: '#FCAF03',
+    backgroundColor: '#006747',
     padding: 12,
     borderRadius: 30,
     alignItems: 'center',
@@ -122,12 +146,4 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontWeight: '600',
   },
-  signup: {
-    fontSize: 20,
-    color: '#000000',
-    fontWeight: '600',
-    marginBottom: 60,
-  },
 });
-
-export default SignUpScreen;

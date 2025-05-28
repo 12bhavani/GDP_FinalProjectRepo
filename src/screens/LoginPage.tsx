@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation'; 
+import { RootStackParamList } from '../types/navigation';
+import Header from '../components/Header'; 
 
 type LoginScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -20,19 +22,34 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const onLogin = () => {
-    auth()
-      .signInWithEmailAndPassword(email, password)
-      .then(() => {
-        navigation.navigate('Home');
-      })
-      .catch(error => {
-        if(error.code === 'auth/invalid-credential') {
-          Alert.alert('invalid email or password')
-        } else {
-          Alert.alert(error.message);
-        }
-      });
+ const onLogin = () => {
+    if (email === 'admin@gmail.com') {
+      auth()
+        .signInWithEmailAndPassword(email, password)
+        .then(() => {
+          navigation.navigate('AdminDashboard');
+        })
+        .catch(error => {
+          if (error.code === 'auth/invalid-credential') {
+            Alert.alert('Invalid email or password');
+          } else {
+            Alert.alert(error.message);
+          }
+        });
+    } else {
+      auth()
+        .signInWithEmailAndPassword(email, password)
+        .then(() => {
+          navigation.replace('Home');
+        })
+        .catch(error => {
+          if (error.code === 'auth/invalid-credential') {
+            Alert.alert('Invalid email or password');
+          } else {
+            Alert.alert(error.message);
+          }
+        });
+    }
   };
 
   const onSignUp = () => {
@@ -40,51 +57,50 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <Header title="Login" />
 
-      <TextInput
-        placeholder="Email"
-        style={styles.input}
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+      <View style={[styles.container,{marginTop: -300}]}>
+        <TextInput
+          placeholder="Email"
+          style={styles.input} 
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
 
-      <TextInput
-        placeholder="Password"
-        style={styles.input}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+        <TextInput
+          placeholder="Password"
+          style={[styles.input, { marginTop: 16 }]} 
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <TouchableOpacity style={styles.button} onPress={onLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={onLogin}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.linkButton} onPress={onSignUp}>
-        <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={styles.linkButton} onPress={onSignUp}>
+          <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     padding: 20,
     justifyContent: 'center',
-    height: '100%',
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    alignSelf: 'center',
-    marginBottom: 40,
+    flex: 1,
   },
   input: {
     borderWidth: 1,
@@ -92,10 +108,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 5,
-    marginTop: 20,
+    // Removed marginTop here to eliminate top spacing
   },
   button: {
-    backgroundColor: '#FCAF03',
+    backgroundColor: '#006747',
     padding: 15,
     borderRadius: 30,
     alignItems: 'center',
