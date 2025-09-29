@@ -1,3 +1,4 @@
+import './firebase/config';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -11,6 +12,15 @@ import ProfilePage from './src/screens/ProfilePage';
 import AdminDashboard from './src/screens/AdminDashboard';
 import ManageSlots from './src/screens/ManageSlots';
 import ViewAppointments from './src/screens/ViewAppointments';
+import Contact from './src/screens/Contact';
+import Chatbot from './src/screens/Chatbot';
+
+// ✅ Import Appointment screens
+import AppointmentHistory from './src/screens/AppointmentHistory';
+import AppointmentDetails from './src/screens/AppointmentDetails';
+// App.tsx
+import TherapyAssistanceOnline from './src/screens/TherapyAssistanceOnline';  // 👈 new import
+
 
 const Stack = createNativeStackNavigator();
 
@@ -20,9 +30,9 @@ const App = () => {
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
-          headerShown: false,              // hide native headers
-          animation: 'slide_from_right',  // ✅ smooth transition
-          gestureEnabled: true,           // ✅ enable swipe back
+          headerShown: false, // default: no header
+          animation: 'slide_from_right',
+          gestureEnabled: true,
         }}
       >
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -34,7 +44,24 @@ const App = () => {
         <Stack.Screen name="Calendar" component={CalendarScreen} />
         <Stack.Screen name="Form" component={Fillform} />
         <Stack.Screen name="Profile" component={ProfilePage} />
-        
+        <Stack.Screen name="Contact" component={Contact} />
+        <Stack.Screen name="Chatbot" component={Chatbot} />
+        <Stack.Screen
+  name="TherapyAssistanceOnline"
+  component={TherapyAssistanceOnline}
+/>
+
+
+        {/* ✅ Appointment screens */}
+        <Stack.Screen name="AppointmentHistory" component={AppointmentHistory} />
+
+        <Stack.Screen
+  name="AppointmentDetails"
+  component={AppointmentDetails}
+  options={{
+    headerShown: false, // ✅ hide native header
+  }}
+/>
 
       </Stack.Navigator>
     </NavigationContainer>

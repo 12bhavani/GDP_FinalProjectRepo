@@ -1,21 +1,31 @@
 import React, { useState } from 'react';
-import {View, Text, TextInput, Button, Alert, StyleSheet,
-  ScrollView, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity
+} from 'react-native';
 import { db } from '../../firebase/config';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import auth from '@react-native-firebase/auth';
 import { RootStackParamList } from '../types/navigation';
 
 type HealthFormScreenRouteProp = RouteProp<RootStackParamList, 'Form'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HealthFormScreen() {
   const route = useRoute<HealthFormScreenRouteProp>();
+  const navigation = useNavigation<NavigationProp>();
   const { date, slot } = route.params;
 
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
-//   const [gender, setGender] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female' | ''>('');
   const [healthIssue, setHealthIssue] = useState('');
   const [question1, setQuestion1] = useState<'yes' | 'no' | ''>('');
@@ -24,57 +34,59 @@ export default function HealthFormScreen() {
 
   const user = auth().currentUser;
 
-const handleSubmit = async () => {
-  if (!name || !age || !gender || !healthIssue || !question1 || !question2) {
-    Alert.alert('Please fill all fields');
-    return;
-  }
+  const handleSubmit = async () => {
+    if (!name || !age || !gender || !healthIssue || !question1 || !question2) {
+      Alert.alert('Please fill all fields');
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    // Save form data under subcollection
-    await setDoc(
-        doc(db, 'slots', date, 'details', `${slot}_${date}`), 
-      {
-        name,
-        age: Number(age),
-        gender,
-        healthIssue,
-        question1,
-        question2,
-        email: user?.email || 'anonymous',
-        createdAt: serverTimestamp(),
-      }
-    );
+    try {
+      await setDoc(
+        doc(db, 'slots', date, 'details', `${slot}_${date}`),
+        {
+          name,
+          age: Number(age),
+          gender,
+          healthIssue,
+          question1,
+          question2,
+          email: user?.email || 'anonymous',
+          createdAt: serverTimestamp(),
+        }
+      );
 
-    // mark the slot as booked in parent document
-    await setDoc(
-      doc(db, 'slots', date),
-      {
-        [slot]: 'booked',
-        [`${slot}_user`]: user?.email || 'anonymous',
-      },
-      { merge: true }
-    );
+      await setDoc(
+        doc(db, 'slots', date),
+        {
+          [slot]: 'booked',
+          [`${slot}_user`]: user?.email || 'anonymous',
+        },
+        { merge: true }
+      );
 
-    Alert.alert('Form submitted and slot booked successfully!');
-    
-    // reset form
-    setName('');
-    setAge('');
-    setGender('');
-    setHealthIssue('');
-    setQuestion1('');
-    setQuestion2('');
-  } catch (error) {
-    console.error('Error submitting form:', error);
-    Alert.alert('Failed to submit form. Please try again.');
-  }
+      Alert.alert('Form submitted and slot booked successfully!');
 
-  setLoading(false);
-};
+      // reset form
+      setName('');
+      setAge('');
+      setGender('');
+      setHealthIssue('');
+      setQuestion1('');
+      setQuestion2('');
 
+      // Smooth transition to Home screen
+      setTimeout(() => {
+        navigation.navigate('Home');
+      }, 300);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      Alert.alert('Failed to submit form. Please try again.');
+    }
+
+    setLoading(false);
+  };
 
   const renderYesNoButtons = (
     value: 'yes' | 'no' | '',
@@ -105,24 +117,23 @@ const handleSubmit = async () => {
     setValue: React.Dispatch<React.SetStateAction<'Male' | 'Female' | ''>>,
     questionLabel: string
   ) => (
-
-  <View style={styles.yesNoContainer}>
-        <Text style={styles.label}>Gender</Text>
-        <View style={styles.buttonGroup}>
-            <TouchableOpacity
-            style={[styles.yesNoButton, gender === 'Male' && styles.selectedButton]}
-            onPress={() => setGender('Male')}
-            >
-            <Text style={gender === 'Male' ? styles.selectedButtonText : styles.buttonText}>Male</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-            style={[styles.yesNoButton, gender === 'Female' && styles.selectedButton]}
-            onPress={() => setGender('Female')}
-            >
-            <Text style={gender === 'Female' ? styles.selectedButtonText : styles.buttonText}>Female</Text>
-            </TouchableOpacity>
-        </View>
-        </View>
+    <View style={styles.yesNoContainer}>
+      <Text style={styles.label}>Gender</Text>
+      <View style={styles.buttonGroup}>
+        <TouchableOpacity
+          style={[styles.yesNoButton, gender === 'Male' && styles.selectedButton]}
+          onPress={() => setGender('Male')}
+        >
+          <Text style={gender === 'Male' ? styles.selectedButtonText : styles.buttonText}>Male</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.yesNoButton, gender === 'Female' && styles.selectedButton]}
+          onPress={() => setGender('Female')}
+        >
+          <Text style={gender === 'Female' ? styles.selectedButtonText : styles.buttonText}>Female</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 
   return (
@@ -145,14 +156,6 @@ const handleSubmit = async () => {
         value={age}
         onChangeText={setAge}
       />
-
-      {/* <Text style={styles.label}>Gender</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your gender"
-        value={gender}
-        onChangeText={setGender}
-      /> */}
 
       {renderGenderButtons(gender, setGender, 'Gender')}
 

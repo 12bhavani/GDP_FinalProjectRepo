@@ -12,8 +12,13 @@ export type RootStackParamList = {
   ManageSlots: undefined;
   ViewAppointments: undefined;
 
-  // 👇 Add these new screens
+  // ✅ Appointments
   AppointmentHistory: undefined;
+
+  // ✅ Student
   HealthReports: undefined;
   Messages: undefined;
+  Contact: undefined;   // 👈 Added
+  TherapyAssistanceOnline: undefined;
+  Chatbot: undefined;
 };

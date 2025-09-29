@@ -1,143 +1,149 @@
-import React from 'react';
+// src/screens/HomeScreen.tsx
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Modal,
-  Button,
+  ActivityIndicator,
+  Linking,
+  Alert,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
-import { WebView } from 'react-native-webview';
+import { auth, db } from '../../firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const menuOptions = [
-  { label: 'Profile', screen: 'Profile' },
-  { label: 'Schedule an Appointment', screen: 'Calendar' },
-  { label: 'Appointment History', screen: 'AppointmentHistory' },
-  { label: 'Health Reports', screen: 'HealthReports' },
-  { label: 'Messages', screen: 'Messages' },
-  { label: 'Contact', screen: 'Contact' },
-  
-];
+export default function HomeScreen() {
+  const navigation = useNavigation<any>();
+  const user = auth.currentUser;
+  const uid = user?.uid || '';
 
-const HomeScreen = ({ navigation }: any) => {
-  const [isModalVisible, setModalVisible] = React.useState(false);
+  const [userData, setUserData] = useState<{ name?: string }>({});
+  const [loading, setLoading] = useState(true);
 
-  const handlePress = (screen: string) => {
-    if (screen === 'Contact') {
-      setModalVisible(true);
-    } else {
-      navigation.navigate(screen);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!uid) return;
+      try {
+        const userRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) setUserData(docSnap.data());
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserData();
+  }, [uid]);
+
+  if (loading) return <ActivityIndicator style={{ marginTop: 40 }} />;
+
+  // ✅ Menu Options (logout included as a card)
+  const menuOptions = [
+    { label: 'Profile', screen: 'Profile', icon: 'person-outline' },
+    { label: 'Schedule an Appointment', screen: 'Calendar', icon: 'calendar-outline' },
+    { label: 'Appointment History', screen: 'AppointmentHistory', icon: 'time-outline' },
+    { label: 'Health Reports', screen: 'HealthReports', icon: 'document-text-outline' },
+    { label: 'Messages', screen: 'Messages', icon: 'chatbubble-ellipses-outline' },
+    { label: 'Contact', screen: 'Contact', icon: 'call-outline' },
+    { label: 'Therapy Assistance Online', screen: 'TherapyAssistanceOnline', icon: 'videocam-outline' },
+    { label: 'Chatbot', screen: 'Chatbot', icon: 'help-circle-outline' },
+    { label: 'Logout', action: 'logout', icon: 'log-out-outline' }, // 👈 consistent with others
+  ];
+
+  // ✅ Handle press
+  const handlePress = async (item: any) => {
+    if (item.action === 'logout') {
+      try {
+        await signOut(auth);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      } catch (err) {
+        console.error('Logout failed:', err);
+        Alert.alert('Error', 'Failed to logout. Please try again.');
+      }
+      return;
     }
-  };
 
-  const handleLogout = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Login' }],
-    });
-  };
-
-  // Function to block navigation (links inside the page)
-  const handleShouldStartLoadWithRequest = (event: any) => {
-    // This will intercept and stop all navigation attempts inside the WebView
-    return false;
+    if (item.external) {
+      Linking.openURL(item.external);
+    } else {
+      navigation.navigate(item.screen);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Header title="Wellness Services" />
+      {/* ✅ Custom green header */}
+      <Header title="Home" />
 
-      {/* 🔓 Logout button in top-right */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.body}>
+        {/* ✅ Welcome Section */}
+        <Text style={styles.welcome}>
+          Welcome, {userData.name || user?.email || 'User'} 👋
+        </Text>
+        <Text style={styles.lastLogin}>
+          Last login: {new Date().toLocaleString()}
+        </Text>
 
-      {/* Margin below header */}
-      <View style={{ height: 10 }} />
-
-      <ScrollView contentContainerStyle={styles.tilesContainer}>
-        {menuOptions.map(({ label, screen }) => (
-          <TouchableOpacity
-            key={label}
-            style={styles.card}
-            onPress={() => handlePress(screen)}
-          >
-            <Text style={styles.cardText}>{label}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Modal to show the WebView */}
-      <Modal visible={isModalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
-        <View style={{ flex: 1 }}>
-          <WebView
-            source={{ uri: 'https://www.nwmissouri.edu/wellness/directory/index.htm' }}
-            onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-            startInLoadingState={true} // Show loading indicator while the page is loading
-            javaScriptEnabled={true}  // Allow JavaScript (useful if the page relies on it)
-            domStorageEnabled={true}  // Enable DOM storage
-          />
-          <Button title="Close" onPress={() => setModalVisible(false)} />
+        {/* ✅ Menu Grid */}
+        <View style={styles.grid}>
+          {menuOptions.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.card}
+              onPress={() => handlePress(item)}
+            >
+              <Ionicons name={item.icon} size={28} color="#006747" />
+              <Text style={styles.cardText}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </Modal>
+      </ScrollView>
     </View>
   );
-};
-
-export default HomeScreen;
+}
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
+  container: { flex: 1, backgroundColor: '#fff' },
+  body: { padding: 20 },
+  welcome: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 5,
+    color: '#006747',
   },
-  logoutButton: {
-    position: 'absolute',
-    top: 180,
-    right: 10,
-    zIndex: 10,
-    backgroundColor: 'black',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  logoutText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 15,
-  },
-  tilesContainer: {
-    alignItems: 'center',
-    paddingVertical: 15,
+  lastLogin: { fontSize: 14, marginBottom: 20, color: '#555' },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   card: {
-    width: '85%',
-    height: 60,
-    backgroundColor: '#006747',
-    borderRadius: 12,
-    marginVertical: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    // Stronger iOS shadow
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 3,
-
-    // Stronger Android shadow
-    elevation: 20,
-
-    // Optional border for contrast
-    borderWidth: 0.5,
-    borderColor: '#004d40',
-  },
+  width: '47%',
+  backgroundColor: '#E6F7FF',
+  paddingVertical: 20,  // ↓ was 30
+  marginBottom: 15,
+  borderRadius: 10,
+  alignItems: 'center',
+  elevation: 2,
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+},
 
   cardText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '400',
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#006747',
+    textAlign: 'center',
   },
 });
