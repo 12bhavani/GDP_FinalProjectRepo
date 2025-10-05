@@ -1,21 +1,26 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
-import moment from 'moment';
-import React, { useEffect, useRef, useState } from 'react';
+#!/usr/bin/env python3
+"""
+Script to fix the Chatbot.tsx file with proper template literals
+"""
+
+chatbot_content = '''import React, { useState, useEffect, useRef } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Linking,
-  Platform,
-  StyleSheet,
+  View,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  FlatList,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Linking,
 } from 'react-native';
-import { auth, db } from '../../firebase/config';
 import Header from '../components/Header';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../../firebase/config';
+import moment from 'moment';
 import { GEMINI_CONFIG, MENTAL_HEALTH_PROMPT } from '../config/gemini.config';
 
 const genAI = new GoogleGenerativeAI(GEMINI_CONFIG.API_KEY);
@@ -44,27 +49,27 @@ const emergencyContacts = [
 const faqDatabase = [
   {
     keywords: ['hours', 'open', 'timing', 'schedule', 'when open'],
-    answer: '🕐 **Wellness Services Hours:**\n\nMonday-Friday: 8:00 AM - 5:00 PM\nWeekends: Closed\n\nFor after-hours emergencies, please call 911 or visit Mosaic Medical Center Emergency Department.',
+    answer: '🕐 **Wellness Services Hours:**\\n\\nMonday-Friday: 8:00 AM - 5:00 PM\\nWeekends: Closed\\n\\nFor after-hours emergencies, please call 911 or visit Mosaic Medical Center Emergency Department.',
   },
   {
     keywords: ['location', 'address', 'where', 'find you', 'directions'],
-    answer: '📍 **Location:**\n\nUniversity Wellness Services\n800 University Drive\nMaryville, MO 64468\n\nPhone: 660.562.1348',
+    answer: '📍 **Location:**\\n\\nUniversity Wellness Services\\n800 University Drive\\nMaryville, MO 64468\\n\\nPhone: 660.562.1348',
   },
   {
     keywords: ['services', 'offer', 'provide', 'available', 'what do you'],
-    answer: '🏥 **Our Services:**\n\n• Mental Health Counseling\n• Medical Consultations\n• Wellness Education\n• Health Screenings\n• Emergency Support\n\nWould you like to book an appointment?',
+    answer: '🏥 **Our Services:**\\n\\n• Mental Health Counseling\\n• Medical Consultations\\n• Wellness Education\\n• Health Screenings\\n• Emergency Support\\n\\nWould you like to book an appointment?',
   },
   {
     keywords: ['insurance', 'cost', 'payment', 'billing', 'price', 'fee'],
-    answer: '💳 **Billing & Insurance:**\n\nWe accept most insurance plans. For specific questions about billing, please contact our Billing Coordinator, Linda Guess at:\n\n📞 660.562.1348\n✉️ lguess@nwmissouri.edu',
+    answer: '💳 **Billing & Insurance:**\\n\\nWe accept most insurance plans. For specific questions about billing, please contact our Billing Coordinator, Linda Guess at:\\n\\n📞 660.562.1348\\n✉️ lguess@nwmissouri.edu',
   },
   {
     keywords: ['cancel', 'reschedule', 'change appointment'],
-    answer: '📅 **To Cancel or Reschedule:**\n\nPlease call us at 660.562.1348 or visit your Appointment History in the app to manage your bookings.',
+    answer: '📅 **To Cancel or Reschedule:**\\n\\nPlease call us at 660.562.1348 or visit your Appointment History in the app to manage your bookings.',
   },
   {
     keywords: ['confidential', 'privacy', 'private', 'hipaa'],
-    answer: '🔒 **Privacy & Confidentiality:**\n\nAll services are strictly confidential and HIPAA-compliant. Your health information is protected and will not be shared without your consent, except as required by law.',
+    answer: '🔒 **Privacy & Confidentiality:**\\n\\nAll services are strictly confidential and HIPAA-compliant. Your health information is protected and will not be shared without your consent, except as required by law.',
   },
 ];
 
@@ -130,7 +135,7 @@ export default function ChatbotScreen() {
       addTypingIndicator();
 
       const model = genAI.getGenerativeModel({ model: GEMINI_CONFIG.MODEL });
-      const prompt = `${MENTAL_HEALTH_PROMPT}\n\nStudent question: ${question}`;
+      const prompt = `${MENTAL_HEALTH_PROMPT}\\n\\nStudent question: ${question}`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -212,11 +217,11 @@ export default function ChatbotScreen() {
           ]
         );
       } else {
-        let appointmentText = `📅 **Your Upcoming Appointments:**\n\n`;
+        let appointmentText = `📅 **Your Upcoming Appointments:**\\n\\n`;
         upcoming.forEach((app, idx) => {
-          appointmentText += `${idx + 1}. **${app.date}** at **${app.time}**\n`;
-          appointmentText += `   Doctor: ${app.doctor}\n`;
-          appointmentText += `   Status: ${app.status}\n\n`;
+          appointmentText += `${idx + 1}. **${app.date}** at **${app.time}**\\n`;
+          appointmentText += `   Doctor: ${app.doctor}\\n`;
+          appointmentText += `   Status: ${app.status}\\n\\n`;
         });
 
         addBotMessage(appointmentText, [
@@ -236,13 +241,13 @@ export default function ChatbotScreen() {
   };
 
   const showContacts = () => {
-    let contactText = `📞 **Emergency Contacts:**\n\n`;
+    let contactText = `📞 **Emergency Contacts:**\\n\\n`;
     emergencyContacts.forEach((contact) => {
-      contactText += `• ${contact.label}: ${contact.phone}\n`;
+      contactText += `• ${contact.label}: ${contact.phone}\\n`;
     });
-    contactText += `\n🏥 **Wellness Services:**\n`;
-    contactText += `Phone: 660.562.1348\n`;
-    contactText += `Location: 800 University Drive, Maryville, MO\n\n`;
+    contactText += `\\n🏥 **Wellness Services:**\\n`;
+    contactText += `Phone: 660.562.1348\\n`;
+    contactText += `Location: 800 University Drive, Maryville, MO\\n\\n`;
     contactText += `For full staff directory, visit the Contact section in the app.`;
 
     addBotMessage(contactText, [
@@ -266,7 +271,7 @@ export default function ChatbotScreen() {
     }
 
     addBotMessage(
-      "I don't have a specific answer for that. Would you like to:\n\n1. Try asking our AI assistant\n2. Contact us directly at 660.562.1348\n3. Visit nwmissouri.edu/wellness",
+      "I don't have a specific answer for that. Would you like to:\\n\\n1. Try asking our AI assistant\\n2. Contact us directly at 660.562.1348\\n3. Visit nwmissouri.edu/wellness",
       [
         { label: '💬 Ask AI Assistant', action: 'gemini' },
         { label: '📞 Contact Info', action: 'contacts' },
@@ -299,7 +304,7 @@ export default function ChatbotScreen() {
       case 'book':
         addUserMessage('Book an appointment');
         addBotMessage(
-          '📅 To book an appointment, please use the **Calendar Schedule** feature in the app.\n\nYou can:\n1. Select your preferred date\n2. Choose an available time slot\n3. Fill in your health information\n\nWould you like me to help with anything else?',
+          '📅 To book an appointment, please use the **Calendar Schedule** feature in the app.\\n\\nYou can:\\n1. Select your preferred date\\n2. Choose an available time slot\\n3. Fill in your health information\\n\\nWould you like me to help with anything else?',
           [{ label: '🏠 Main Menu', action: 'menu' }]
         );
         break;
@@ -313,7 +318,7 @@ export default function ChatbotScreen() {
         setMode('gemini');
         addUserMessage('Talk to AI Assistant');
         addBotMessage(
-          "💬 **AI Mental Health Assistant**\n\nI'm here to provide support and advice. Feel free to ask me about:\n\n• Stress management\n• Anxiety or depression\n• Coping strategies\n• Self-care tips\n• Study-life balance\n\n**Type your question below:**",
+          "💬 **AI Mental Health Assistant**\\n\\nI'm here to provide support and advice. Feel free to ask me about:\\n\\n• Stress management\\n• Anxiety or depression\\n• Coping strategies\\n• Self-care tips\\n• Study-life balance\\n\\n**Type your question below:**",
           [{ label: '🏠 Main Menu', action: 'menu' }]
         );
         break;
@@ -322,7 +327,7 @@ export default function ChatbotScreen() {
         setMode('faq');
         addUserMessage('View FAQs');
         addBotMessage(
-          '❓ **Frequently Asked Questions**\n\nType your question, such as:\n\n• What are your hours?\n• Where are you located?\n• What services do you offer?\n• Do you accept insurance?\n• How do I cancel an appointment?\n\n**Or choose an option:**',
+          '❓ **Frequently Asked Questions**\\n\\nType your question, such as:\\n\\n• What are your hours?\\n• Where are you located?\\n• What services do you offer?\\n• Do you accept insurance?\\n• How do I cancel an appointment?\\n\\n**Or choose an option:**',
           [
             { label: '🕐 Hours & Location', action: 'faq_hours' },
             { label: '🏥 Services Offered', action: 'faq_services' },
@@ -549,3 +554,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+'''
+
+# Write the file
+with open('/Users/chanakya/GDP_FinalProjectRepo/src/screens/Chatbot.tsx', 'w') as f:
+    f.write(chatbot_content)
+
+print("✅ Chatbot.tsx has been successfully created!")
