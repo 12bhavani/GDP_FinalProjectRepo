@@ -17,6 +17,8 @@ import { auth, db } from '../../firebase/config';
 import Header from '../components/Header';
 import { GEMINI_CONFIG, MENTAL_HEALTH_PROMPT } from '../config/gemini.config';
  
+const uniqueId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
 
 type Message = {
   id: string;
@@ -88,7 +90,7 @@ export default function ChatbotScreen(): React.JSX.Element {
 
   const addBotMessage = (text: string, buttons?: ButtonOption[]) => {
     const botMessage: Message = {
-      id: String(Date.now()),
+      id: uniqueId(),
       sender: 'bot',
       text,
       buttons,
@@ -99,7 +101,7 @@ export default function ChatbotScreen(): React.JSX.Element {
 
   const addUserMessage = (text: string) => {
     const userMessage: Message = {
-      id: String(Date.now()),
+      id: uniqueId(),
       sender: 'user',
       text,
     };
@@ -131,7 +133,11 @@ export default function ChatbotScreen(): React.JSX.Element {
         throw new Error('API key not configured');
       }
 
-      const makeRequest = async (modelName: string, qText: string) => {
+      const makeRequest = async (
+        modelName: string,
+        qText: string,
+        contextModelText?: string
+      ) => {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
           modelName
         )}:generateContent?key=${encodeURIComponent(GEMINI_CONFIG.API_KEY)}`;
@@ -141,14 +147,21 @@ export default function ChatbotScreen(): React.JSX.Element {
             role: 'system',
             parts: [{ text: MENTAL_HEALTH_PROMPT }],
           },
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: qText }],
-            },
-          ],
+          contents: [],
           generationConfig: GEMINI_CONFIG.GENERATION_CONFIG,
         };
+        // Build contents, optionally include previous model text to request continuation
+        body.contents.push({
+          role: 'user',
+          parts: [{ text: qText }],
+        });
+        if (contextModelText && contextModelText.trim()) {
+          body.contents.push({ role: 'model', parts: [{ text: contextModelText }] });
+          body.contents.push({
+            role: 'user',
+            parts: [{ text: 'Please continue and finish your previous answer succinctly.' }],
+          });
+        }
 
         const res = await fetch(endpoint, {
           method: 'POST',
@@ -166,6 +179,7 @@ export default function ChatbotScreen(): React.JSX.Element {
 
         let textOut = '';
         let blocked = false;
+        let finishUpper = '';
         if (candidates.length > 0) {
           const finish = candidates[0]?.finishReason || candidates[0]?.finish_reason;
           const parts = candidates[0]?.content?.parts || [];
@@ -175,7 +189,7 @@ export default function ChatbotScreen(): React.JSX.Element {
             .trim();
 
           // If blocked or empty, craft helpful message
-          const finishUpper = finish ? String(finish).toUpperCase() : '';
+          finishUpper = finish ? String(finish).toUpperCase() : '';
           const isSafetyFinish = finishUpper.includes('SAFETY');
           if (!textOut && (isSafetyFinish || finishUpper === '')) {
             const blockReason = data?.promptFeedback?.blockReason || data?.prompt_feedback?.block_reason;
@@ -187,7 +201,7 @@ export default function ChatbotScreen(): React.JSX.Element {
           }
         }
 
-        return { textOut, blocked } as { textOut: string; blocked: boolean };
+        return { textOut, blocked, finishUpper } as { textOut: string; blocked: boolean; finishUpper: string };
       };
 
       // Primary request
@@ -195,7 +209,17 @@ export default function ChatbotScreen(): React.JSX.Element {
       const gentlePrompt =
         'In a friendly, supportive tone, give practical, general wellness tips for a college student about: ' +
         '"' + question + '". Avoid diagnosing or medical advice. Keep it to 2 short paragraphs.';
-      let { textOut: botText, blocked } = await makeRequest(primaryModel, gentlePrompt);
+      let { textOut: botText, blocked, finishUpper } = await makeRequest(primaryModel, gentlePrompt);
+
+      // If truncated by token limit, request continuation once
+      if (finishUpper === 'MAX_TOKENS') {
+        const cont = await makeRequest(primaryModel, gentlePrompt, botText);
+        if (cont.textOut) {
+          botText = (botText + '\n\n' + cont.textOut).trim();
+          blocked = blocked || cont.blocked;
+          finishUpper = cont.finishUpper;
+        }
+      }
 
       // If blocked or empty, try safer rephrasing on a broadly available model
       if (!botText || blocked) {
@@ -503,6 +527,7 @@ export default function ChatbotScreen(): React.JSX.Element {
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
         contentContainerStyle={styles.listContent}
+        removeClippedSubviews={false}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
@@ -545,13 +570,18 @@ export default function ChatbotScreen(): React.JSX.Element {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  listContent: { padding: 16, paddingBottom: 20 },
+  listContent: { padding: 16, paddingBottom: 120 },
   messageWrapper: { marginVertical: 6 },
   msg: {
-    maxWidth: '80%',
-    padding: 12,
+    maxWidth: '85%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 12,
     marginVertical: 2,
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    minWidth: 0,
+    overflow: 'hidden',
   },
   user: {
     alignSelf: 'flex-end',
@@ -563,9 +593,19 @@ const styles = StyleSheet.create({
   },
   userText: {
     color: '#fff',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    lineHeight: 20,
+    width: '100%',
+    minWidth: 0,
   },
   botText: {
     color: '#000',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    lineHeight: 20,
+    width: '100%',
+    minWidth: 0,
   },
   typingContainer: {
     flexDirection: 'row',
