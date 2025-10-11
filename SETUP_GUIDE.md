@@ -43,7 +43,7 @@ Your chatbot now has **5 powerful features**:
 ```typescript
 export const GEMINI_CONFIG = {
   API_KEY: 'YOUR_API_KEY_HERE',  // ← Put your key here
-  MODEL: 'gemini-pro',
+  MODEL: 'gemini-2.5-pro',
 };
 ```
 

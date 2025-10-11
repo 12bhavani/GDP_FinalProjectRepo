@@ -1,21 +1,21 @@
 // src/screens/HomeScreen.tsx
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Linking,
-  Alert,
+    ActivityIndicator,
+    Alert,
+    Linking,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Header from '../components/Header';
 import { auth, db } from '../../firebase/config';
-import { doc, getDoc } from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Header from '../components/Header';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();

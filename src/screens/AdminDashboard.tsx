@@ -1,9 +1,9 @@
 // src/screens/AdminDashboard.tsx
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Header from '../components/Header';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function AdminDashboard() {
   const navigation = useNavigation<any>();

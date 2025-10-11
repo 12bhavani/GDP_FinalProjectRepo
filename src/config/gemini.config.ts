@@ -2,11 +2,11 @@
 // You can get your API key from: https://makersuite.google.com/app/apikey
 
 export const GEMINI_CONFIG = {
-  // Replace this with your actual Gemini API key
-  API_KEY: 'AIzaSyBWa3mKj0f3ZYQGImXaR0dSVKVn6UQMxzA',
+  // Use the API key from environment variable or fallback to hardcoded
+  API_KEY: process.env.GEMINI_API_KEY || 'AIzaSyAxTslNc8uqAdVx5ndxCtvLVgIgjFogUQw',
   
-  // Model to use (gemini-pro for text, gemini-pro-vision for images)
-  MODEL: 'gemini-pro',
+  // Model to use (gemini-2.5-pro for text, gemini-2.5-pro-vision for images)
+  MODEL: 'gemini-2.5-pro',
   
   // Safety settings (optional)
   SAFETY_SETTINGS: [

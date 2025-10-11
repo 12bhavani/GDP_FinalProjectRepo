@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import moment from 'moment';
 import React, { useEffect, useRef, useState } from 'react';
@@ -17,8 +16,7 @@ import {
 import { auth, db } from '../../firebase/config';
 import Header from '../components/Header';
 import { GEMINI_CONFIG, MENTAL_HEALTH_PROMPT } from '../config/gemini.config';
-
-const genAI = new GoogleGenerativeAI(GEMINI_CONFIG.API_KEY);
+ 
 
 type Message = {
   id: string;
@@ -44,36 +42,36 @@ const emergencyContacts = [
 const faqDatabase = [
   {
     keywords: ['hours', 'open', 'timing', 'schedule', 'when open'],
-    answer: '🕐 **Wellness Services Hours:**\n\nMonday-Friday: 8:00 AM - 5:00 PM\nWeekends: Closed\n\nFor after-hours emergencies, please call 911 or visit Mosaic Medical Center Emergency Department.',
+    answer: '🕐 Wellness Services Hours:\n\nMonday-Friday: 8:00 AM - 5:00 PM\nWeekends: Closed\n\nFor after-hours emergencies, please call 911 or visit Mosaic Medical Center Emergency Department.',
   },
   {
     keywords: ['location', 'address', 'where', 'find you', 'directions'],
-    answer: '📍 **Location:**\n\nUniversity Wellness Services\n800 University Drive\nMaryville, MO 64468\n\nPhone: 660.562.1348',
+    answer: '📍 Location:\n\nUniversity Wellness Services\n800 University Drive\nMaryville, MO 64468\n\nPhone: 660.562.1348',
   },
   {
     keywords: ['services', 'offer', 'provide', 'available', 'what do you'],
-    answer: '🏥 **Our Services:**\n\n• Mental Health Counseling\n• Medical Consultations\n• Wellness Education\n• Health Screenings\n• Emergency Support\n\nWould you like to book an appointment?',
+    answer: '🏥 Our Services:\n\n• Mental Health Counseling\n• Medical Consultations\n• Wellness Education\n• Health Screenings\n• Emergency Support\n\nWould you like to book an appointment?',
   },
   {
     keywords: ['insurance', 'cost', 'payment', 'billing', 'price', 'fee'],
-    answer: '💳 **Billing & Insurance:**\n\nWe accept most insurance plans. For specific questions about billing, please contact our Billing Coordinator, Linda Guess at:\n\n📞 660.562.1348\n✉️ lguess@nwmissouri.edu',
+    answer: '💳 Billing & Insurance:\n\nWe accept most insurance plans. For specific questions about billing, please contact our Billing Coordinator, Linda Guess at:\n\n📞 660.562.1348\n✉️ lguess@nwmissouri.edu',
   },
   {
     keywords: ['cancel', 'reschedule', 'change appointment'],
-    answer: '📅 **To Cancel or Reschedule:**\n\nPlease call us at 660.562.1348 or visit your Appointment History in the app to manage your bookings.',
+    answer: '📅 To Cancel or Reschedule:\n\nPlease call us at 660.562.1348 or visit your Appointment History in the app to manage your bookings.',
   },
   {
     keywords: ['confidential', 'privacy', 'private', 'hipaa'],
-    answer: '🔒 **Privacy & Confidentiality:**\n\nAll services are strictly confidential and HIPAA-compliant. Your health information is protected and will not be shared without your consent, except as required by law.',
+    answer: '🔒 Privacy & Confidentiality:\n\nAll services are strictly confidential and HIPAA-compliant. Your health information is protected and will not be shared without your consent, except as required by law.',
   },
 ];
 
-export default function ChatbotScreen() {
+export default function ChatbotScreen(): React.JSX.Element {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [input, setInput] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const [mode, setMode] = useState<'menu' | 'gemini' | 'faq'>('menu');
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<any>>(null);
 
   useEffect(() => {
     addBotMessage(
@@ -129,27 +127,109 @@ export default function ChatbotScreen() {
       setLoading(true);
       addTypingIndicator();
 
-      const model = genAI.getGenerativeModel({ model: GEMINI_CONFIG.MODEL });
-      const prompt = `${MENTAL_HEALTH_PROMPT}\n\nStudent question: ${question}`;
+      if (!GEMINI_CONFIG.API_KEY || GEMINI_CONFIG.API_KEY === 'YOUR_API_KEY_HERE') {
+        throw new Error('API key not configured');
+      }
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const makeRequest = async (modelName: string, qText: string) => {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+          modelName
+        )}:generateContent?key=${encodeURIComponent(GEMINI_CONFIG.API_KEY)}`;
+
+        const body: any = {
+          systemInstruction: {
+            role: 'system',
+            parts: [{ text: MENTAL_HEALTH_PROMPT }],
+          },
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: qText }],
+            },
+          ],
+          generationConfig: GEMINI_CONFIG.GENERATION_CONFIG,
+        };
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Gemini HTTP ${res.status}: ${errText}`);
+        }
+
+        const data = await res.json();
+        const candidates = data?.candidates || [];
+
+        let textOut = '';
+        let blocked = false;
+        if (candidates.length > 0) {
+          const finish = candidates[0]?.finishReason || candidates[0]?.finish_reason;
+          const parts = candidates[0]?.content?.parts || [];
+          textOut = parts
+            .map((p: any) => (typeof p?.text === 'string' ? p.text : ''))
+            .join('')
+            .trim();
+
+          // If blocked or empty, craft helpful message
+          const finishUpper = finish ? String(finish).toUpperCase() : '';
+          const isSafetyFinish = finishUpper.includes('SAFETY');
+          if (!textOut && (isSafetyFinish || finishUpper === '')) {
+            const blockReason = data?.promptFeedback?.blockReason || data?.prompt_feedback?.block_reason;
+            blocked = Boolean(blockReason);
+            const reason = blockReason ? String(blockReason).replace(/_/g, ' ').toLowerCase() : 'policy';
+            textOut = 'I couldn\'t answer that due to safety ' +
+              reason +
+              '. Try rephrasing your question or ask about coping strategies, self-care, stress, or study-life balance.';
+          }
+        }
+
+        return { textOut, blocked } as { textOut: string; blocked: boolean };
+      };
+
+      // Primary request
+      const primaryModel = 'gemini-2.5-pro';
+      const gentlePrompt =
+        'In a friendly, supportive tone, give practical, general wellness tips for a college student about: ' +
+        '"' + question + '". Avoid diagnosing or medical advice. Keep it to 2 short paragraphs.';
+      let { textOut: botText, blocked } = await makeRequest(primaryModel, gentlePrompt);
+
+      // If blocked or empty, try safer rephrasing on a broadly available model
+      if (!botText || blocked) {
+        const safeQuestion = 'Offer supportive, non-clinical wellness suggestions about: ' + question +
+          '. Keep advice actionable and compassionate.';
+        const fallback = await makeRequest('gemini-2.5-pro', safeQuestion);
+        if (fallback.textOut) {
+          botText = fallback.textOut;
+          blocked = fallback.blocked;
+        }
+      }
 
       removeTypingIndicator();
-      addBotMessage(
-        text,
-        [
-          { label: '💬 Ask Another Question', action: 'gemini' },
-          { label: '🏠 Main Menu', action: 'menu' },
-        ]
-      );
-    } catch (error) {
+      addBotMessage(botText, [
+        { label: '💬 Ask Another Question', action: 'gemini' },
+        { label: '🏠 Main Menu', action: 'menu' },
+      ]);
+    } catch (error: any) {
+      console.log('Gemini API Error:', error);
       removeTypingIndicator();
-      addBotMessage(
-        "I'm having trouble connecting right now. Please try again or contact our counseling services directly at 660.562.1348.",
-        [{ label: '🏠 Main Menu', action: 'menu' }]
-      );
+
+      let errorMessage = 'I\'m having trouble connecting right now. ';
+      if (error?.message?.includes('API key')) {
+        errorMessage += 'The AI service isn\'t properly configured. ';
+      } else if (
+        error?.message?.includes('fetch') ||
+        error?.message?.includes('network')
+      ) {
+        errorMessage += 'Please check your internet connection. ';
+      }
+      errorMessage +=
+        'You can contact our counseling services directly at 660.562.1348.';
+
+      addBotMessage(errorMessage, [{ label: '🏠 Main Menu', action: 'menu' }]);
     } finally {
       setLoading(false);
     }
@@ -212,9 +292,9 @@ export default function ChatbotScreen() {
           ]
         );
       } else {
-        let appointmentText = `📅 **Your Upcoming Appointments:**\n\n`;
+  let appointmentText = '📅 Your Upcoming Appointments:\n\n';
         upcoming.forEach((app, idx) => {
-          appointmentText += `${idx + 1}. **${app.date}** at **${app.time}**\n`;
+          appointmentText += `${idx + 1}. ${app.date} at ${app.time}\n`;
           appointmentText += `   Doctor: ${app.doctor}\n`;
           appointmentText += `   Status: ${app.status}\n\n`;
         });
@@ -236,14 +316,14 @@ export default function ChatbotScreen() {
   };
 
   const showContacts = () => {
-    let contactText = `📞 **Emergency Contacts:**\n\n`;
+    let contactText = '📞 Emergency Contacts:\n\n';
     emergencyContacts.forEach((contact) => {
       contactText += `• ${contact.label}: ${contact.phone}\n`;
     });
-    contactText += `\n🏥 **Wellness Services:**\n`;
-    contactText += `Phone: 660.562.1348\n`;
-    contactText += `Location: 800 University Drive, Maryville, MO\n\n`;
-    contactText += `For full staff directory, visit the Contact section in the app.`;
+    contactText += '\n🏥 Wellness Services:\n';
+    contactText += 'Phone: 660.562.1348\n';
+    contactText += 'Location: 800 University Drive, Maryville, MO\n\n';
+    contactText += 'For full staff directory, visit the Contact section in the app.';
 
     addBotMessage(contactText, [
       { label: '📞 Call Wellness Services', action: 'call_wellness' },
@@ -299,7 +379,7 @@ export default function ChatbotScreen() {
       case 'book':
         addUserMessage('Book an appointment');
         addBotMessage(
-          '📅 To book an appointment, please use the **Calendar Schedule** feature in the app.\n\nYou can:\n1. Select your preferred date\n2. Choose an available time slot\n3. Fill in your health information\n\nWould you like me to help with anything else?',
+          '📅 To book an appointment, please use the Calendar Schedule feature in the app.\n\nYou can:\n1. Select your preferred date\n2. Choose an available time slot\n3. Fill in your health information\n\nWould you like me to help with anything else?',
           [{ label: '🏠 Main Menu', action: 'menu' }]
         );
         break;
@@ -313,7 +393,7 @@ export default function ChatbotScreen() {
         setMode('gemini');
         addUserMessage('Talk to AI Assistant');
         addBotMessage(
-          "💬 **AI Mental Health Assistant**\n\nI'm here to provide support and advice. Feel free to ask me about:\n\n• Stress management\n• Anxiety or depression\n• Coping strategies\n• Self-care tips\n• Study-life balance\n\n**Type your question below:**",
+          "💬 AI Mental Health Assistant\n\nI'm here to provide support and advice. Feel free to ask me about:\n\n• Stress management\n• Anxiety or depression\n• Coping strategies\n• Self-care tips\n• Study-life balance\n\nType your question below:",
           [{ label: '🏠 Main Menu', action: 'menu' }]
         );
         break;
@@ -322,7 +402,7 @@ export default function ChatbotScreen() {
         setMode('faq');
         addUserMessage('View FAQs');
         addBotMessage(
-          '❓ **Frequently Asked Questions**\n\nType your question, such as:\n\n• What are your hours?\n• Where are you located?\n• What services do you offer?\n• Do you accept insurance?\n• How do I cancel an appointment?\n\n**Or choose an option:**',
+          '❓ Frequently Asked Questions\n\nType your question, such as:\n\n• What are your hours?\n• Where are you located?\n• What services do you offer?\n• Do you accept insurance?\n• How do I cancel an appointment?\n\nOr choose an option:',
           [
             { label: '🕐 Hours & Location', action: 'faq_hours' },
             { label: '🏥 Services Offered', action: 'faq_services' },
@@ -400,7 +480,7 @@ export default function ChatbotScreen() {
           <View style={styles.buttonContainer}>
             {item.buttons.map((btn, idx) => (
               <TouchableOpacity
-                key={idx}
+                key={`${item.id}-btn-${idx}`}
                 style={styles.optionButton}
                 onPress={() => handleButtonPress(btn.action)}
               >
