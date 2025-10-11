@@ -1,4 +1,22 @@
 {
   "name": "metaHub",
-  "displayName": "metaHub"
+  "displayName": "metaHub",
+  "expo": {
+    "name": "metaHub",
+    "slug": "metahub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "metahub",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.metahub"
+    },
+    "android": {
+      "package": "com.metahub"
+    },
+    "plugins": [
+      "@react-native-firebase/app"
+    ]
+  }
 }
