@@ -12,13 +12,19 @@ export type RootStackParamList = {
   ManageSlots: undefined;
   ViewAppointments: undefined;
 
-  // ✅ Appointments
+  // Appointments
   AppointmentHistory: undefined;
 
-  // ✅ Student
+  // Student
   HealthReports: undefined;
   Messages: undefined;
-  Contact: undefined;   // 👈 Added
+  Contact: undefined;   
   TherapyAssistanceOnline: undefined;
   Chatbot: undefined;
+
+  SelectCommunicationOption: undefined;
+
+  ComposeMessage: {
+    recipientRole: 'NURSE' | 'COUNSELOR'; 
+  };
 };
