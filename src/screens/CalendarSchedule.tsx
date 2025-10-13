@@ -105,7 +105,7 @@ export default function CalendarScreen() {
   const handleSlotPress = (slot: string) => {
     const user = auth().currentUser;
     if (!user || !selectedDate) {
-      Alert.alert('You must be logged in to book a slot.');
+      Alert.alert('Unknown Error.');
       return;
     }
 
