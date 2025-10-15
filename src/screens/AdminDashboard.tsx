@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const menuOptions = [
     { label: 'Manage Available Slots', screen: 'ManageSlots', icon: 'calendar-clear-outline' },
     { label: 'View Booked Appointments', screen: 'ViewAppointments', icon: 'people-outline' },
+    { label: 'Messages', screen: 'Messages', icon: 'chatbubble-ellipses-outline' },
     { label: 'Profile', screen: 'Profile', icon: 'person-outline' },
     { label: 'Contact', screen: 'Contact', icon: 'call-outline' },
     { label: 'Logout', screen: 'Login', icon: 'log-out-outline', logout: true },
