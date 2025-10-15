@@ -1,5 +1,10 @@
 # 🤖 Enhanced Wellness Chatbot
 
+pkill -f "expo start" || true && sleep 2 && npx expo start --tunnel --go --clear
+
+use the above command to run expo go, honestly it works better this way
+
+
 ## Overview
 The chatbot has been completely rebuilt with intelligent features:
 
