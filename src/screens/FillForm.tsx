@@ -1,19 +1,18 @@
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  Alert,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity
+    Alert,
+    Button,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { db } from '../../firebase/config';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import auth from '@react-native-firebase/auth';
+import { auth, db } from '../../firebase/config';
 import { RootStackParamList } from '../types/navigation';
 
 type HealthFormScreenRouteProp = RouteProp<RootStackParamList, 'Form'>;
@@ -32,7 +31,7 @@ export default function HealthFormScreen() {
   const [question2, setQuestion2] = useState<'yes' | 'no' | ''>('');
   const [loading, setLoading] = useState(false);
 
-  const user = auth().currentUser;
+  const user = auth.currentUser;
 
   const handleSubmit = async () => {
     if (!name || !age || !gender || !healthIssue || !question1 || !question2) {

@@ -1,24 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
+    ActivityIndicator,
+    Alert,
+    Button,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { db } from '../../firebase/config';
 import Header from '../components/Header';
 
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
-import auth from '@react-native-firebase/auth';
 import moment from 'moment';
+import { auth } from '../../firebase/config';
 
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation'; 
+import { RootStackParamList } from '../types/navigation';
 
 type CalendarScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Calendar'>;
 
@@ -103,7 +103,7 @@ export default function CalendarScreen() {
   };
 
   const handleSlotPress = (slot: string) => {
-    const user = auth().currentUser;
+    const user = auth.currentUser;
     if (!user || !selectedDate) {
       Alert.alert('Unknown Error.');
       return;

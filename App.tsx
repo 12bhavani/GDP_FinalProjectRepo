@@ -1,17 +1,18 @@
-import './firebase/config';
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useEffect } from 'react';
 
-import LoginScreen from './src/screens/LoginPage';
-import SignUpScreen from './src/screens/SignUpScreen';
-import HomeScreen from './src/screens/HomeScreen';
+import AdminDashboard from './src/screens/AdminDashboard';
 import CalendarScreen from './src/screens/CalendarSchedule';
+import Chatbot from './src/screens/Chatbot';
+import Contact from './src/screens/Contact';
 import Fillform from './src/screens/FillForm';
 import Messages from './src/screens/Messages';
 import ProfilePage from './src/screens/ProfilePage';
 import AdminDashboard from './src/screens/AdminDashboard';
 import ManageSlots from './src/screens/ManageSlots';
+import ProfilePage from './src/screens/ProfilePage';
+import SignUpScreen from './src/screens/SignUpScreen';
 import ViewAppointments from './src/screens/ViewAppointments';
 import Contact from './src/screens/Contact';
 import Chatbot from './src/screens/Chatbot';
@@ -20,8 +21,8 @@ import ComposeMessage from './src/screens/ComposeMessage.tsx';
 
 
 // ✅ Import Appointment screens
-import AppointmentHistory from './src/screens/AppointmentHistory';
 import AppointmentDetails from './src/screens/AppointmentDetails';
+import AppointmentHistory from './src/screens/AppointmentHistory';
 // App.tsx
 import TherapyAssistanceOnline from './src/screens/TherapyAssistanceOnline';  // 👈 new import
 import MessagesTest from './src/screens/Messages';
@@ -30,6 +31,12 @@ import MessagesTest from './src/screens/Messages';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+  // Initialize Firebase when app mounts
+  useEffect(() => {
+    // Import Firebase config to initialize it
+    require('./firebase/config');
+  }, []);
+
   return (
     <NavigationContainer>
       <Stack.Navigator
