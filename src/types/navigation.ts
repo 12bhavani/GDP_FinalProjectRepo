@@ -21,7 +21,7 @@ export type RootStackParamList = {
   Contact: undefined;   
   TherapyAssistanceOnline: undefined;
   Chatbot: undefined;
-
+  TAO: undefined;
   SelectCommunicationOption: undefined;
 
   ComposeMessage: {

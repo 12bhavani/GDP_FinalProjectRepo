@@ -51,9 +51,10 @@ export default function HomeScreen() {
     { label: 'Health Reports', screen: 'HealthReports', icon: 'document-text-outline' },
     { label: 'Messages', screen: 'Messages', icon: 'chatbubble-ellipses-outline' },
     { label: 'Contact', screen: 'Contact', icon: 'call-outline' },
-    { label: 'Therapy Assistance Online', screen: 'TherapyAssistanceOnline', icon: 'videocam-outline' },
+    // { label: 'Therapy Assistance Online', screen: 'TherapyAssistanceOnline', icon: 'videocam-outline' },
     { label: 'Chatbot', screen: 'Chatbot', icon: 'help-circle-outline' },
-    { label: 'Logout', action: 'logout', icon: 'log-out-outline' }, // 👈 consistent with others
+    { label: 'TAO', screen: 'TAO', icon: 'videocam-outline' }, // 👈 fix: use screen, and a relevant icon
+    { label: 'Logout', action: 'logout', icon: 'log-out-outline' },
   ];
 
   // ✅ Handle press
@@ -74,7 +75,7 @@ export default function HomeScreen() {
 
     if (item.external) {
       Linking.openURL(item.external);
-    } else {
+    } else if (item.screen) {
       navigation.navigate(item.screen);
     }
   };
@@ -101,7 +102,7 @@ export default function HomeScreen() {
               style={styles.card}
               onPress={() => handlePress(item)}
             >
-              <Ionicons name={item.icon} size={28} color="#006747" />
+              <Ionicons name={item.icon as any} size={28} color="#006747" />
               <Text style={styles.cardText}>{item.label}</Text>
             </TouchableOpacity>
           ))}

@@ -9,23 +9,20 @@ import Contact from './src/screens/Contact';
 import Fillform from './src/screens/FillForm';
 import Messages from './src/screens/Messages';
 import ProfilePage from './src/screens/ProfilePage';
-import AdminDashboard from './src/screens/AdminDashboard';
 import ManageSlots from './src/screens/ManageSlots';
-import ProfilePage from './src/screens/ProfilePage';
 import SignUpScreen from './src/screens/SignUpScreen';
 import ViewAppointments from './src/screens/ViewAppointments';
-import Contact from './src/screens/Contact';
-import Chatbot from './src/screens/Chatbot';
 import SelectCommunicationOption from './src/screens/SelectCommunicationOption.tsx';
 import ComposeMessage from './src/screens/ComposeMessage.tsx';
-
-
 // ✅ Import Appointment screens
 import AppointmentDetails from './src/screens/AppointmentDetails';
 import AppointmentHistory from './src/screens/AppointmentHistory';
 // App.tsx
 import TherapyAssistanceOnline from './src/screens/TherapyAssistanceOnline';  // 👈 new import
 import MessagesTest from './src/screens/Messages';
+import LoginScreen from './src/screens/LoginPage';
+import HomeScreen from './src/screens/HomeScreen';
+import TAO from './src/screens/TAO';
 
 
 const Stack = createNativeStackNavigator();
@@ -59,6 +56,7 @@ const App = () => {
         <Stack.Screen name="Profile" component={ProfilePage} />
         <Stack.Screen name="Contact" component={Contact} />
         <Stack.Screen name="Chatbot" component={Chatbot} />
+        <Stack.Screen name="TAO" component={TAO} />
 
         <Stack.Screen name="ComposeMessage" component={ComposeMessage} />
 
