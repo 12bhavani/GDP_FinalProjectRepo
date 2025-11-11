@@ -14,23 +14,22 @@ import SignUpScreen from './src/screens/SignUpScreen';
 import ViewAppointments from './src/screens/ViewAppointments';
 import SelectCommunicationOption from './src/screens/SelectCommunicationOption.tsx';
 import ComposeMessage from './src/screens/ComposeMessage.tsx';
-// ✅ Import Appointment screens
 import AppointmentDetails from './src/screens/AppointmentDetails';
 import AppointmentHistory from './src/screens/AppointmentHistory';
-// App.tsx
-import TherapyAssistanceOnline from './src/screens/TherapyAssistanceOnline';  // 👈 new import
+import TherapyAssistanceOnline from './src/screens/TherapyAssistanceOnline';
 import MessagesTest from './src/screens/Messages';
 import LoginScreen from './src/screens/LoginPage';
 import HomeScreen from './src/screens/HomeScreen';
 import TAO from './src/screens/TAO';
 
+// ✅ NEW IMPORT
+import HealthReports from './src/screens/HealthReports.tsx';
 
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   // Initialize Firebase when app mounts
   useEffect(() => {
-    // Import Firebase config to initialize it
     require('./firebase/config');
   }, []);
 
@@ -39,7 +38,7 @@ const App = () => {
       <Stack.Navigator
         initialRouteName="Login"
         screenOptions={{
-          headerShown: false, // default: no header
+          headerShown: false,
           animation: 'slide_from_right',
           gestureEnabled: true,
         }}
@@ -57,27 +56,25 @@ const App = () => {
         <Stack.Screen name="Contact" component={Contact} />
         <Stack.Screen name="Chatbot" component={Chatbot} />
         <Stack.Screen name="TAO" component={TAO} />
-
         <Stack.Screen name="ComposeMessage" component={ComposeMessage} />
-
-        <Stack.Screen name="SelectCommunicationOption" component={SelectCommunicationOption} />
         <Stack.Screen
-  name="TherapyAssistanceOnline"
-  component={TherapyAssistanceOnline}
-/>
-
-
-        {/* ✅ Appointment screens */}
+          name="SelectCommunicationOption"
+          component={SelectCommunicationOption}
+        />
+        <Stack.Screen
+          name="TherapyAssistanceOnline"
+          component={TherapyAssistanceOnline}
+        />
         <Stack.Screen name="AppointmentHistory" component={AppointmentHistory} />
-
         <Stack.Screen
-  name="AppointmentDetails"
-  component={AppointmentDetails}
-  options={{
-    headerShown: false, // ✅ hide native header
-  }}
-/>
-
+          name="AppointmentDetails"
+          component={AppointmentDetails}
+          options={{
+            headerShown: false,
+          }}
+        />
+        {/* ✅ NEWLY ADDED HEALTH REPORT SCREEN */}
+        <Stack.Screen name="HealthReports" component={HealthReports} />
       </Stack.Navigator>
     </NavigationContainer>
   );
