@@ -16,8 +16,8 @@ import SelectCommunicationOption from './src/screens/SelectCommunicationOption.t
 import ComposeMessage from './src/screens/ComposeMessage.tsx';
 import AppointmentDetails from './src/screens/AppointmentDetails';
 import AppointmentHistory from './src/screens/AppointmentHistory';
+import AdminNewMessage from './src/screens/AdminNewMessage';
 import TherapyAssistanceOnline from './src/screens/TherapyAssistanceOnline';
-import MessagesTest from './src/screens/Messages';
 import LoginScreen from './src/screens/LoginPage';
 import HomeScreen from './src/screens/HomeScreen';
 import TAO from './src/screens/TAO';
@@ -56,6 +56,7 @@ const App = () => {
         <Stack.Screen name="Contact" component={Contact} />
         <Stack.Screen name="Chatbot" component={Chatbot} />
         <Stack.Screen name="TAO" component={TAO} />
+        <Stack.Screen name="AdminNewMessage" component={AdminNewMessage} />
         <Stack.Screen name="ComposeMessage" component={ComposeMessage} />
         <Stack.Screen
           name="SelectCommunicationOption"

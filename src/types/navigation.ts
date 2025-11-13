@@ -11,10 +11,9 @@ export type RootStackParamList = {
   AdminDashboard: undefined;
   ManageSlots: undefined;
   ViewAppointments: undefined;
-
+  AdminNewMessage: undefined;
   // Appointments
   AppointmentHistory: undefined;
-
   // Student
   HealthReports: undefined;
   Messages: undefined;

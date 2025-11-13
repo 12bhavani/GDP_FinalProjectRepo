@@ -2,111 +2,172 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
+import { addDoc, collection } from 'firebase/firestore';
+import { db, auth } from '../../firebase/config';
+import { useRoute, useNavigation } from '@react-navigation/native';
 
-type Props = {
-  navigation: any;
+type RouteParams = {
+  recipient: 'NURSE' | 'COUNSELOR';
 };
 
-const SelectCommunicationOption: React.FC<Props> = ({ navigation }) => {
-  const [selectedOption, setSelectedOption] = useState<'NURSE' | 'COUNSELOR' | null>(null);
+const adminUid = 'hardcoded_admin_uid_here'; // ⚠️ Replace with your actual admin UID
 
-  const onContinue = () => {
-    if (!selectedOption) {
-      Alert.alert('Please select an option');
+const ComposeMessage: React.FC = () => {
+  const route = useRoute();
+  const navigation = useNavigation<any>();
+  const { recipient } = route.params as RouteParams;
+
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+
+  const sendMessage = async () => {
+    if (!subject || !body) {
+      Alert.alert('Please fill subject and message.');
       return;
     }
-    // Navigate to ComposeMessage and pass the selected recipient
-    navigation.navigate('ComposeMessage', { recipient: selectedOption });
+
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert('User not logged in.');
+      return;
+    }
+
+    try {
+      // 👇 Store in admin's inbox (admin receives every message)
+      await addDoc(collection(db, 'users', adminUid, 'messages'), {
+        from: user.email,
+        to: recipient === 'NURSE' ? 'Nurse' : 'Counselor',
+        subject,
+        body,
+        date: new Date().toISOString(),
+        isRead: false,
+      });
+
+      // 👇 Store in sender's sent messages
+      await addDoc(collection(db, 'users', user.uid, 'sentMessages'), {
+        from: user.email,
+        to: recipient === 'NURSE' ? 'Nurse' : 'Counselor',
+        subject,
+        body,
+        date: new Date().toISOString(),
+        isRead: false,
+      });
+
+      Alert.alert('Message sent successfully!');
+      navigation.goBack();
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Failed to send message.');
+    }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Select Communication Option</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.heading}>New Message</Text>
 
-      <TouchableOpacity
-        style={[styles.optionButton, selectedOption === 'NURSE' && styles.selectedOption]}
-        onPress={() => setSelectedOption('NURSE')}
-      >
-        <Text style={styles.optionText}>I want to send a message to the Nurse.</Text>
-      </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>To:</Text>
+          <Text style={styles.value}>
+            {recipient === 'NURSE' ? 'Nurse' : 'Counselor'}
+          </Text>
+        </View>
 
-      <TouchableOpacity
-        style={[styles.optionButton, selectedOption === 'COUNSELOR' && styles.selectedOption]}
-        onPress={() => setSelectedOption('COUNSELOR')}
-      >
-        <Text style={styles.optionText}>I want to send a message to a Counselor.</Text>
-      </TouchableOpacity>
+        <View style={styles.field}>
+          <Text style={styles.label}>Subject:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter subject"
+            value={subject}
+            onChangeText={setSubject}
+          />
+        </View>
 
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.button} onPress={onContinue}>
-          <Text style={styles.buttonText}>Continue</Text>
+        <View style={styles.field}>
+          <Text style={styles.label}>Message:</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Enter your message"
+            value={body}
+            onChangeText={setBody}
+            multiline
+          />
+        </View>
+
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <Text style={styles.sendButtonText}>Send Message</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.cancelButton]}
+          style={[styles.sendButton, { backgroundColor: '#ccc' }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.buttonText, styles.cancelButtonText]}>Cancel</Text>
+          <Text style={[styles.sendButtonText, { color: '#000' }]}>Cancel</Text>
         </TouchableOpacity>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
-export default SelectCommunicationOption;
+export default ComposeMessage;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
-    justifyContent: 'center',
   },
   heading: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '700',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  optionButton: {
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    borderRadius: 10,
-    padding: 15,
-    marginVertical: 10,
-  },
-  selectedOption: {
-    backgroundColor: '#007AFF',
-  },
-  optionText: {
     color: '#007AFF',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  field: {
+    marginBottom: 15,
+  },
+  label: {
     fontWeight: '600',
+    fontSize: 16,
+    marginBottom: 5,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 40,
+  value: {
+    fontSize: 16,
+    color: '#333',
   },
-  button: {
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  sendButton: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
-    minWidth: 120,
+    marginTop: 10,
     alignItems: 'center',
   },
-  buttonText: {
-    color: 'white',
+  sendButtonText: {
+    color: '#fff',
     fontWeight: '700',
     fontSize: 16,
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-  },
-  cancelButtonText: {
-    color: '#333',
   },
 });
