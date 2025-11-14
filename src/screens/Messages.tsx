@@ -17,10 +17,12 @@ import { collection, getDocs, addDoc, updateDoc, doc } from 'firebase/firestore'
 import { auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 
+import CustomHeader from '../components/Header'; // custom header component
+
 type Message = {
   id: string;
-  from: string;
-  to: string;
+  from: string;      
+  to: string;        
   subject: string;
   body: string;
   date: string;
@@ -39,14 +41,16 @@ const Messages: React.FC = () => {
   const user = auth.currentUser;
   const isAdmin = user?.email === adminEmail;
 
-  const [replyRecipientUid, setReplyRecipientUid] = useState<string | null>(null);
-  const [replyRecipientName, setReplyRecipientName] = useState<string>('');
+  // Reply fields
+  const [replyRecipientEmail, setReplyRecipientEmail] = useState<string | null>(null);
   const [replySubject, setReplySubject] = useState('');
   const [replyBody, setReplyBody] = useState('');
 
+  /** FETCH INBOX / SENT MESSAGES */
   const fetchMessages = async (tab: 'Inbox' | 'Sent') => {
     if (!user) return;
     setLoading(true);
+
     try {
       const ref = collection(
         db,
@@ -55,19 +59,21 @@ const Messages: React.FC = () => {
         tab === 'Inbox' ? 'messages' : 'sentMessages'
       );
       const snap = await getDocs(ref);
+
       const msgs: Message[] = [];
       snap.forEach(docSnap => {
         const data = docSnap.data();
         msgs.push({
           id: docSnap.id,
-          from: data.from || '',
-          to: data.to || '',
-          subject: data.subject || '',
-          body: data.body || '',
-          date: data.date || '',
-          isRead: data.isRead || false,
+          from: data.from,
+          to: data.to,
+          subject: data.subject,
+          body: data.body,
+          date: data.date,
+          isRead: data.isRead,
         });
       });
+
       msgs.sort((a, b) => (a.date > b.date ? -1 : 1));
       setMessages(msgs);
     } catch {
@@ -81,8 +87,10 @@ const Messages: React.FC = () => {
     fetchMessages(activeTab);
   }, [activeTab]);
 
+  /** MARK MESSAGE AS READ */
   const markAsRead = async (id: string) => {
     if (!user) return;
+
     try {
       await updateDoc(doc(db, 'users', user.uid, 'messages', id), { isRead: true });
       setMessages(prev =>
@@ -93,58 +101,67 @@ const Messages: React.FC = () => {
     }
   };
 
+  /** SEND REPLY */
   const sendReply = async () => {
-    if (!replyRecipientUid || !replySubject || !replyBody) {
+    if (!replyRecipientEmail || !replySubject || !replyBody) {
       Alert.alert('Please fill subject and message.');
       return;
     }
 
     try {
-      // Determine role name for sender
-const senderRole =
-  user?.email === 'nurse@gmail.com'
-    ? 'Nurse'
-    : user?.email === 'counselor@gmail.com'
-    ? 'Counselor'
-    : user?.email === adminEmail
-    ? 'Admin'
-    : user?.email || 'User';
+      const senderEmail = user?.email || 'unknown';
 
-await addDoc(collection(db, 'users', user!.uid, 'sentMessages'), {
-  from: senderRole,
-  to: replyRecipientUid,
-  subject: replySubject,
-  body: replyBody,
-  date: new Date().toISOString(),
-  isRead: false,
-});
+      /** 1. ADD TO SENDER'S SENT MESSAGES */
+      await addDoc(collection(db, 'users', user!.uid, 'sentMessages'), {
+        from: senderEmail,
+        to: replyRecipientEmail,
+        subject: replySubject,
+        body: replyBody,
+        date: new Date().toISOString(),
+        isRead: false,
+      });
 
-await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
-  from: senderRole,
-  to: replyRecipientUid,
-  subject: replySubject,
-  body: replyBody,
-  date: new Date().toISOString(),
-  isRead: false,
-});
+      /** 2. FIND RECIPIENT USER UID BY EMAIL */
+      const usersSnap = await getDocs(collection(db, 'users'));
+      let recipientUid: string | null = null;
 
+      usersSnap.forEach(docSnap => {
+        if (docSnap.data().email === replyRecipientEmail) {
+          recipientUid = docSnap.id;
+        }
+      });
+
+      if (!recipientUid) {
+        Alert.alert('Recipient account not found.');
+        return;
+      }
+
+      /** 3. ADD TO RECIPIENT'S INBOX */
+      await addDoc(collection(db, 'users', recipientUid, 'messages'), {
+        from: senderEmail,
+        to: replyRecipientEmail,
+        subject: replySubject,
+        body: replyBody,
+        date: new Date().toISOString(),
+        isRead: false,
+      });
 
       Alert.alert('Message sent!');
-      setReplyRecipientUid(null);
-      setReplyRecipientName('');
+      setReplyRecipientEmail(null);
       setReplySubject('');
       setReplyBody('');
       fetchMessages(activeTab);
+
     } catch (err) {
       console.log(err);
       Alert.alert('Failed to send message.');
     }
   };
 
-  const renderHeader = () => (
+  /** HEADER COMPONENT */
+  const Header = React.memo(() => (
     <>
-      <Text style={styles.headingText}>Secure Messages</Text>
-
+      {/* TABS */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'Inbox' && styles.activeTab]}
@@ -154,6 +171,7 @@ await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
             Inbox
           </Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.tabButton, activeTab === 'Sent' && styles.activeTab]}
           onPress={() => setActiveTab('Sent')}
@@ -164,32 +182,36 @@ await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
         </TouchableOpacity>
       </View>
 
-      {isAdmin && (
-        <View style={styles.actionContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => fetchMessages(activeTab)}
-          >
-            <Text style={styles.actionText}>Refresh</Text>
-          </TouchableOpacity>
+      {/* ACTION BUTTONS */}
+      <View style={styles.actionContainer}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => fetchMessages(activeTab)}>
+          <Text style={styles.actionText}>Refresh</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#007AFF' }]}
-            onPress={() => navigation.navigate('AdminNewMessage')}
-          >
-            <Text style={[styles.actionText, { color: '#fff' }]}>New Message</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#007AFF' }]}
+          onPress={() =>
+            isAdmin
+              ? navigation.navigate('AdminNewMessage')
+              : navigation.navigate('SelectCommunicationOption')
+          }
+        >
+          <Text style={[styles.actionText, { color: '#fff' }]}>New Message</Text>
+        </TouchableOpacity>
+      </View>
 
-      {isAdmin && replyRecipientUid && (
+      {/* REPLY BOX */}
+      {replyRecipientEmail && (
         <View style={styles.replyBox}>
-          <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Reply to: {replyRecipientName}</Text>
+          <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>
+            Replying to: {replyRecipientEmail}
+          </Text>
           <TextInput
             placeholder="Subject"
             value={replySubject}
             onChangeText={setReplySubject}
             style={styles.input}
+            multiline
           />
           <TextInput
             placeholder="Message"
@@ -202,8 +224,9 @@ await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
         </View>
       )}
     </>
-  );
+  ));
 
+  /** EACH MESSAGE ROW */
   const renderItem = ({ item }: { item: Message }) => {
     const isExpanded = expandedMessageId === item.id;
 
@@ -226,16 +249,16 @@ await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
               setExpandedMessageId(isExpanded ? null : item.id);
             }}
           >
-            <Text style={styles.readButtonText}>{isExpanded ? 'Hide' : 'Read'}</Text>
+            <Text style={styles.readButtonText}>
+              {isExpanded ? 'Hide' : 'Read'}
+            </Text>
           </TouchableOpacity>
 
-          {isAdmin && activeTab === 'Inbox' && (
+          {/* Reply shown ONLY in Inbox */}
+          {activeTab === 'Inbox' && (
             <TouchableOpacity
               style={[styles.readButton, { marginLeft: 10, backgroundColor: '#28a745' }]}
-              onPress={() => {
-                setReplyRecipientUid(item.from);
-                setReplyRecipientName(item.from);
-              }}
+              onPress={() => setReplyRecipientEmail(item.from)}
             >
               <Text style={styles.readButtonText}>Reply</Text>
             </TouchableOpacity>
@@ -253,15 +276,16 @@ await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
 
   return (
     <SafeAreaView style={styles.container}>
+      <CustomHeader title="Secure Messages" />
       {loading ? (
         <ActivityIndicator style={{ marginTop: 50 }} />
       ) : (
         <FlatList
-          ListHeaderComponent={renderHeader}
+          ListHeaderComponent={Header}
           data={messages}
           keyExtractor={item => item.id}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 30 }}
+          contentContainerStyle={{ paddingTop: 10, paddingBottom: 30 }}
         />
       )}
     </SafeAreaView>
@@ -271,23 +295,81 @@ await addDoc(collection(db, 'users', replyRecipientUid, 'messages'), {
 export default Messages;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 10 },
-  headingText: { fontSize: 26, fontWeight: '700', color: '#007AFF', marginTop: 20 },
-  tabContainer: { flexDirection: 'row', marginTop: 15, marginBottom: 5 },
-  tabButton: { marginRight: 20, paddingVertical: 6, paddingHorizontal: 16, borderRadius: 6 },
-  activeTab: { backgroundColor: '#e6f0ff', borderBottomWidth: 3, borderBottomColor: '#007AFF' },
+  container: { flex: 1, backgroundColor: '#fff',
+  paddingLeft: 20, paddingRight: 20,
+  paddingTop: 20,      
+  paddingBottom: 20, },
+  headingText: { 
+  fontSize: 26, 
+  fontWeight: '700', 
+  color: '#007AFF', 
+  marginTop: 20 
+},
+tabContainer: { 
+  flexDirection: 'row', 
+  marginTop: 15, 
+  marginBottom: 5 
+},
+tabButton: { 
+  paddingVertical: 6, 
+  paddingHorizontal: 16, // keep a small padding only
+  borderRadius: 6, 
+  marginRight: 10 
+},
+activeTab: { 
+  backgroundColor: '#e6f0ff', 
+  borderBottomWidth: 3, 
+  borderBottomColor: '#007AFF' 
+},
+
   tabText: { fontSize: 18, color: '#007AFF' },
   activeTabText: { fontWeight: 'bold', textDecorationLine: 'underline' },
-  messageCard: { backgroundColor: '#f9f9f9', borderRadius: 10, padding: 12, marginVertical: 6, borderWidth: 1, borderColor: '#ddd' },
+  messageCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    padding: 12,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
   label: { fontSize: 15, fontWeight: 'bold', color: '#007AFF' },
   value: { fontSize: 15, marginBottom: 6, color: '#000' },
-  readButton: { alignSelf: 'flex-start', backgroundColor: '#007AFF', paddingVertical: 6, paddingHorizontal: 16, borderRadius: 8 },
+  readButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#007AFF',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
   readButtonText: { color: '#fff', fontWeight: '600' },
-  messageBodyContainer: { backgroundColor: '#eef4ff', borderRadius: 8, padding: 10, marginTop: 10 },
+  messageBodyContainer: {
+    backgroundColor: '#eef4ff',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 10,
+  },
   bodyText: { fontSize: 15, color: '#333' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 6, padding: 8, marginBottom: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 10,
+  },
+  
   actionContainer: { flexDirection: 'row', marginVertical: 8 },
-  actionButton: { backgroundColor: '#f4f4f4', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 18, marginRight: 10 },
+  actionButton: {
+    backgroundColor: '#f4f4f4',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    marginRight: 10,
+  },
   actionText: { fontSize: 16, fontWeight: '600', color: '#000' },
-  replyBox: { marginVertical: 10, padding: 10, backgroundColor: '#eef4ff', borderRadius: 8 },
+  replyBox: {
+    marginVertical: 10,
+    padding: 10,
+    backgroundColor: '#eef4ff',
+    borderRadius: 8,
+  },
 });

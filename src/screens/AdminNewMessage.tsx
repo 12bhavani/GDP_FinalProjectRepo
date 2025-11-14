@@ -12,7 +12,7 @@ import {
 import { db, auth } from '../../firebase/config';
 import { addDoc, collection, getDocs } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
-
+import Header from '../components/Header';
 const AdminNewMessage: React.FC = () => {
   const navigation = useNavigation<any>();
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -36,7 +36,19 @@ const AdminNewMessage: React.FC = () => {
 
       usersSnap.forEach(docSnap => {
         const data = docSnap.data();
-        if (data.email === recipientEmail) {
+
+        // 🔥 Automatically detect email field name
+        const storedEmail =
+          data.email ||
+          data.userEmail ||
+          data.emailAddress ||
+          data.username ||
+          null;
+
+        if (
+          storedEmail &&
+          storedEmail.toLowerCase() === recipientEmail.toLowerCase()
+        ) {
           recipientUid = docSnap.id;
         }
       });
@@ -47,7 +59,7 @@ const AdminNewMessage: React.FC = () => {
         return;
       }
 
-      // Save message under admin → sentMessages
+      // Save message in admin → sentMessages
       await addDoc(collection(db, 'users', sender.uid, 'sentMessages'), {
         from: sender.email,
         to: recipientEmail,
@@ -57,7 +69,7 @@ const AdminNewMessage: React.FC = () => {
         isRead: false,
       });
 
-      // Save message under recipient → messages
+      // Save message in recipient → messages
       await addDoc(collection(db, 'users', recipientUid, 'messages'), {
         from: sender.email,
         to: recipientEmail,
@@ -82,7 +94,7 @@ const AdminNewMessage: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>New Message</Text>
+      <Header title="Compose a New Message" />
 
       <TextInput
         style={styles.input}

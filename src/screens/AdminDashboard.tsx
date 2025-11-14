@@ -8,6 +8,11 @@ import Header from '../components/Header';
 export default function AdminDashboard() {
   const navigation = useNavigation<any>();
 
+  // 🔥 REMOVE BACK BUTTON (Hide default header)
+  React.useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, []);
+
   // ✅ Admin Menu Options
   const menuOptions = [
     { label: 'Manage Available Slots', screen: 'ManageSlots', icon: 'calendar-clear-outline' },
@@ -20,7 +25,6 @@ export default function AdminDashboard() {
 
   const handlePress = (item: any) => {
     if (item.logout) {
-      // You can replace with a proper logout handler if you use Firebase Auth
       navigation.reset({
         index: 0,
         routes: [{ name: 'Login' }],
@@ -32,14 +36,14 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      {/* ✅ Custom green header */}
+      {/* Custom green header */}
       <Header title="Admin Dashboard" />
 
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.welcome}>Welcome, Admin 👋</Text>
         <Text style={styles.subText}>Use the options below to manage the system:</Text>
 
-        {/* ✅ Grid Menu */}
+        {/* Grid Menu */}
         <View style={styles.grid}>
           {menuOptions.map((item, index) => (
             <TouchableOpacity
@@ -79,8 +83,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 10,
     alignItems: 'center',
-    elevation: 2, // Android shadow
-    shadowColor: '#000', // iOS shadow
+    elevation: 2,
+    shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },

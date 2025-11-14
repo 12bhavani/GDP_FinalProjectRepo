@@ -13,7 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { doc, addDoc, collection } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
-
+import Header from '../components/Header';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ComposeMessage'>;
 
 type RouteProp = {
@@ -60,7 +60,7 @@ const ComposeMessage: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Compose New Secure Message</Text>
+      <Header title="Compose Message" />
       <Text style={styles.label}>Recipient:</Text>
       <Text style={styles.value}>{recipient}</Text>
       <Text style={styles.label}>Subject:</Text>
@@ -94,24 +94,73 @@ const ComposeMessage: React.FC = () => {
 export default ComposeMessage;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  heading: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-  label: { fontSize: 16, marginTop: 10 },
-  value: { fontSize: 16, fontWeight: '600', marginBottom: 10 },
+  container: {
+    flex: 1,
+    padding: 20,
+    paddingHorizontal: 20, 
+    paddingBottom: 40, 
+  },
+  heading: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginVertical: 15,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 15,
+    color: '#333',
+  },
+  value: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 10,
+    color: '#555',
+  },
   input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    padding: 10, marginTop: 5,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 5,
+    backgroundColor: '#fff',
+    fontSize: 16,
+    textAlignVertical: 'top', // ensures multiline input starts at top
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
   },
   buttons: {
-    flexDirection: 'row', justifyContent: 'space-around', marginTop: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 30,
   },
   sendButton: {
-    backgroundColor: '#007AFF', padding: 12, borderRadius: 8,
+    backgroundColor: '#007AFF',
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    flex: 1,
+    marginRight: 10,
+    alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#ccc', padding: 12, borderRadius: 8,
+    backgroundColor: '#ccc',
+    paddingVertical: 14,
+    paddingHorizontal: 25,
+    borderRadius: 10,
+    flex: 1,
+    marginLeft: 10,
+    alignItems: 'center',
   },
   buttonText: {
-    color: 'white', fontWeight: '600',
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
   },
 });
+

@@ -1,173 +1,73 @@
-import React, { useState } from 'react';
+// src/screens/SelectCommunicationOption.tsx
+import React from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  SafeAreaView,
 } from 'react-native';
-import { addDoc, collection } from 'firebase/firestore';
-import { db, auth } from '../../firebase/config';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import CustomHeader from '../components/Header';
 
-type RouteParams = {
-  recipient: 'NURSE' | 'COUNSELOR';
-};
-
-const adminUid = 'hardcoded_admin_uid_here'; // ⚠️ Replace with your actual admin UID
-
-const ComposeMessage: React.FC = () => {
-  const route = useRoute();
+const SelectCommunicationOption: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { recipient } = route.params as RouteParams;
-
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
-
-  const sendMessage = async () => {
-    if (!subject || !body) {
-      Alert.alert('Please fill subject and message.');
-      return;
-    }
-
-    const user = auth.currentUser;
-    if (!user) {
-      Alert.alert('User not logged in.');
-      return;
-    }
-
-    try {
-      // 👇 Store in admin's inbox (admin receives every message)
-      await addDoc(collection(db, 'users', adminUid, 'messages'), {
-        from: user.email,
-        to: recipient === 'NURSE' ? 'Nurse' : 'Counselor',
-        subject,
-        body,
-        date: new Date().toISOString(),
-        isRead: false,
-      });
-
-      // 👇 Store in sender's sent messages
-      await addDoc(collection(db, 'users', user.uid, 'sentMessages'), {
-        from: user.email,
-        to: recipient === 'NURSE' ? 'Nurse' : 'Counselor',
-        subject,
-        body,
-        date: new Date().toISOString(),
-        isRead: false,
-      });
-
-      Alert.alert('Message sent successfully!');
-      navigation.goBack();
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Failed to send message.');
-    }
-  };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.heading}>New Message</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      {/* Header */}
+      <CustomHeader title="Secure Messages" />
 
-        <View style={styles.field}>
-          <Text style={styles.label}>To:</Text>
-          <Text style={styles.value}>
-            {recipient === 'NURSE' ? 'Nurse' : 'Counselor'}
-          </Text>
-        </View>
+      {/* Main Content */}
+      <View style={styles.container}>
+        <Text style={styles.heading}>Who do you want to message?</Text>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Subject:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter subject"
-            value={subject}
-            onChangeText={setSubject}
-          />
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.label}>Message:</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            placeholder="Enter your message"
-            value={body}
-            onChangeText={setBody}
-            multiline
-          />
-        </View>
-
-        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-          <Text style={styles.sendButtonText}>Send Message</Text>
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() =>
+            navigation.navigate("ComposeMessage", { recipient: "NURSE" })
+          }
+        >
+          <Text style={styles.optionText}>Message Nurse</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.sendButton, { backgroundColor: '#ccc' }]}
-          onPress={() => navigation.goBack()}
+          style={styles.option}
+          onPress={() =>
+            navigation.navigate("ComposeMessage", { recipient: "COUNSELOR" })
+          }
         >
-          <Text style={[styles.sendButtonText, { color: '#000' }]}>Cancel</Text>
+          <Text style={styles.optionText}>Message Counselor</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </SafeAreaView>
   );
 };
 
-export default ComposeMessage;
+export default SelectCommunicationOption;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
+    justifyContent: "center",
   },
   heading: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#007AFF',
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: 22,
+    fontWeight: "700",
+    marginBottom: 30,
+    textAlign: "center",
   },
-  field: {
+  option: {
+    backgroundColor: "#007AFF",
+    paddingVertical: 14,
+    borderRadius: 8,
     marginBottom: 15,
   },
-  label: {
-    fontWeight: '600',
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  value: {
-    fontSize: 16,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  sendButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 16,
+  optionText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
