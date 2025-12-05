@@ -14,7 +14,7 @@ const SelectCommunicationOption: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       {/* Header */}
       <CustomHeader title="Secure Messages" />
 
@@ -40,7 +40,7 @@ const SelectCommunicationOption: React.FC = () => {
           <Text style={styles.optionText}>Message Counselor</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -50,7 +50,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: "center",
   },
   heading: {
     fontSize: 22,

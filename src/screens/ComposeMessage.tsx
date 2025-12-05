@@ -59,35 +59,47 @@ const ComposeMessage: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Header title="Compose Message" />
-      <Text style={styles.label}>Recipient:</Text>
-      <Text style={styles.value}>{recipient}</Text>
-      <Text style={styles.label}>Subject:</Text>
-      <TextInput
-        style={styles.input}
-        value={subject}
-        onChangeText={setSubject}
-        placeholder="Enter subject"
-      />
-      <Text style={styles.label}>Message:</Text>
-      <TextInput
-        style={[styles.input, { height: 100 }]}
-        value={body}
-        onChangeText={setBody}
-        placeholder="Write your message..."
-        multiline
-      />
-
       <View style={styles.buttons}>
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-          <Text style={styles.buttonText}>Send</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+            <Text style={styles.buttonText}>Send</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      <View style={{ padding: 20 }}>
+        <Text style={styles.label}>Recipient: {recipient}</Text>
+        <Text style={styles.label}>Subject:</Text>
+        <TextInput
+          style={styles.input}
+          value={subject}
+          onChangeText={setSubject}
+          placeholder="Enter subject"
+          multiline
+          blurOnSubmit={false}
+          autoCorrect={true}
+          autoCapitalize="sentences"
+          keyboardType="default"
+          textAlignVertical="top"
+        />
+        <Text style={styles.label}>Message:</Text>
+        <TextInput
+          style={[styles.input, { height: 100 }]} 
+          value={body}
+          onChangeText={setBody}
+          placeholder="Write your message..."
+          multiline
+          blurOnSubmit={false}
+          autoCorrect={true}
+          autoCapitalize="sentences"
+          keyboardType="default"
+          textAlignVertical="top"
+        />
+        
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -96,9 +108,6 @@ export default ComposeMessage;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    paddingHorizontal: 20, 
-    paddingBottom: 40, 
   },
   heading: {
     fontSize: 22,
@@ -106,12 +115,14 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     marginVertical: 15,
     textAlign: 'center',
+    padding: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    marginTop: 15,
+    marginTop: 5,
     color: '#333',
+    
   },
   value: {
     fontSize: 16,

@@ -8,12 +8,12 @@ import Header from '../components/Header';
 export default function AdminDashboard() {
   const navigation = useNavigation<any>();
 
-  // 🔥 REMOVE BACK BUTTON (Hide default header)
+
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, []);
 
-  // ✅ Admin Menu Options
+
   const menuOptions = [
     { label: 'Manage Available Slots', screen: 'ManageSlots', icon: 'calendar-clear-outline' },
     { label: 'View Booked Appointments', screen: 'ViewAppointments', icon: 'people-outline' },
@@ -51,7 +51,7 @@ export default function AdminDashboard() {
               style={styles.card}
               onPress={() => handlePress(item)}
             >
-              <Ionicons name={item.icon} size={28} color="#006747" />
+              <Ionicons name={item.icon as any} size={28} color="#006747" />
               <Text style={styles.cardText}>{item.label}</Text>
             </TouchableOpacity>
           ))}

@@ -93,7 +93,7 @@ const AdminNewMessage: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={{ flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 0 }}>
       <Header title="Compose a New Message" />
 
       <TextInput
@@ -112,30 +112,33 @@ const AdminNewMessage: React.FC = () => {
       />
 
       <TextInput
-        style={[styles.input, { height: 120 }]}
+        style={[styles.input, { height: 80 }]}
         placeholder="Message Body"
         value={body}
         onChangeText={setBody}
         multiline
       />
 
-      <TouchableOpacity
-        style={[styles.sendButton, loading && { opacity: 0.6 }]}
-        onPress={handleSendMessage}
-        disabled={loading}
-      >
-        <Text style={styles.sendButtonText}>
-          {loading ? 'Sending...' : 'Send Message'}
-        </Text>
-      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+  <TouchableOpacity
+    style={[styles.sendButton, loading && { opacity: 0.6, flex: 1, marginRight: 10 }]}
+    onPress={handleSendMessage}
+    disabled={loading}
+  >
+    <Text style={styles.sendButtonText}>
+      {loading ? 'Sending...' : 'Send Message'}
+    </Text>
+  </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.backButton]}
-        onPress={() => navigation.goBack()}
-      >
-        <Text style={styles.backText}>Back</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+  <TouchableOpacity
+    style={[styles.backButton, { flex: 1, marginLeft: 10 }]}
+    onPress={() => navigation.goBack()}
+  >
+    <Text style={styles.backText}>Cancel</Text>
+  </TouchableOpacity>
+</View>
+
+    </View>
   );
 };
 
@@ -149,21 +152,25 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
-    marginBottom: 12,
+    marginTop:4,
+    marginBottom: 4,
     fontSize: 16,
   },
   sendButton: {
     backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    borderRadius: 8,
+    marginTop:-10,
+    paddingVertical: 17,
+    paddingHorizontal:35,
+    borderRadius: 25,
     alignItems: 'center',
   },
   sendButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
   backButton: {
     backgroundColor: '#f4f4f4',
-    marginTop: 15,
-    paddingVertical: 10,
-    borderRadius: 8,
+    marginTop:-10,
+    paddingVertical: 17,
+    paddingHorizontal:35,
+    borderRadius: 25,
     alignItems: 'center',
   },
   backText: { fontSize: 16, color: '#333', fontWeight: '500' },
