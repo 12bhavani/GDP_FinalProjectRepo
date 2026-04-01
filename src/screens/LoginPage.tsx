@@ -14,6 +14,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import Header from '../components/Header';
+import {
+  HARDCODED_ADMIN_CREDENTIALS,
+  isHardcodedAdminLogin,
+} from '../config/adminCredentials';
 
 import { auth } from '../../firebase/config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -35,9 +39,18 @@ const LoginScreen: React.FC = () => {
 
     try {
       setSubmitting(true);
+
+      if (isHardcodedAdminLogin(trimmedEmail, password)) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'AdminDashboard' }],
+        });
+        return;
+      }
+
       await signInWithEmailAndPassword(auth, trimmedEmail, password);
 
-      if (trimmedEmail === 'admin@gmail.com') {
+      if (trimmedEmail === HARDCODED_ADMIN_CREDENTIALS.email) {
         navigation.navigate('AdminDashboard');
       } else {
         navigation.replace('Home');
