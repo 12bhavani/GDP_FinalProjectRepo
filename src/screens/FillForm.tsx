@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import {
     Alert,
     Button,
+    Linking,
     ScrollView,
     StyleSheet,
     Text,
@@ -17,6 +18,10 @@ import { RootStackParamList } from '../types/navigation';
 
 type HealthFormScreenRouteProp = RouteProp<RootStackParamList, 'Form'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type CaseType = 'emergency' | 'non-emergency' | '';
+
+const EMERGENCY_PHONE_DISPLAY = '660.562.1348';
+const EMERGENCY_PHONE_DIAL = '6605621348';
 
 export default function HealthFormScreen() {
   const route = useRoute<HealthFormScreenRouteProp>();
@@ -29,11 +34,20 @@ export default function HealthFormScreen() {
   const [healthIssue, setHealthIssue] = useState('');
   const [question1, setQuestion1] = useState<'yes' | 'no' | ''>('');
   const [question2, setQuestion2] = useState<'yes' | 'no' | ''>('');
+  const [caseType, setCaseType] = useState<CaseType>('');
   const [loading, setLoading] = useState(false);
 
   const user = auth.currentUser;
 
   const handleSubmit = async () => {
+    if (caseType !== 'non-emergency') {
+      Alert.alert(
+        'Emergency support',
+        `Please call ${EMERGENCY_PHONE_DISPLAY} immediately for emergency support.`
+      );
+      return;
+    }
+
     if (!name || !age || !gender || !healthIssue || !question1 || !question2) {
       Alert.alert('Please fill all fields');
       return;
@@ -51,6 +65,7 @@ export default function HealthFormScreen() {
           healthIssue,
           question1,
           question2,
+          caseType: 'non-emergency',
           email: user?.email || 'anonymous',
           createdAt: serverTimestamp(),
         }
@@ -74,6 +89,7 @@ export default function HealthFormScreen() {
       setHealthIssue('');
       setQuestion1('');
       setQuestion2('');
+      setCaseType('');
 
       // Smooth transition to Home screen
       setTimeout(() => {
@@ -85,6 +101,17 @@ export default function HealthFormScreen() {
     }
 
     setLoading(false);
+  };
+
+  const handleEmergencyCall = async () => {
+    try {
+      await Linking.openURL(`tel:${EMERGENCY_PHONE_DIAL}`);
+    } catch (error) {
+      Alert.alert(
+        'Call failed',
+        `Unable to open your phone app. Please call ${EMERGENCY_PHONE_DISPLAY} manually.`
+      );
+    }
   };
 
   const renderYesNoButtons = (
@@ -138,43 +165,105 @@ export default function HealthFormScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Health Form</Text>
+      <Text style={styles.metaText}>Date: {date} | Slot: {slot}</Text>
 
-      <Text style={styles.label}>Name</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your full name"
-        value={name}
-        onChangeText={setName}
-      />
+      <Text style={styles.label}>Case Type</Text>
+      <Text style={styles.helperText}>
+        Please choose emergency or non-emergency before continuing.
+      </Text>
 
-      <Text style={styles.label}>Age</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Enter your age"
-        keyboardType="numeric"
-        value={age}
-        onChangeText={setAge}
-      />
+      <View style={styles.caseTypeButtonGroup}>
+        <TouchableOpacity
+          style={[
+            styles.caseTypeButton,
+            caseType === 'emergency' && styles.caseTypeButtonEmergencySelected,
+          ]}
+          onPress={() => setCaseType('emergency')}
+        >
+          <Text
+            style={[
+              styles.caseTypeButtonText,
+              caseType === 'emergency' && styles.caseTypeButtonTextSelected,
+            ]}
+          >
+            Emergency
+          </Text>
+        </TouchableOpacity>
 
-      {renderGenderButtons(gender, setGender, 'Gender')}
+        <TouchableOpacity
+          style={[
+            styles.caseTypeButton,
+            caseType === 'non-emergency' && styles.caseTypeButtonNonEmergencySelected,
+          ]}
+          onPress={() => setCaseType('non-emergency')}
+        >
+          <Text
+            style={[
+              styles.caseTypeButtonText,
+              caseType === 'non-emergency' && styles.caseTypeButtonTextSelected,
+            ]}
+          >
+            Non-Emergency
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.label}>Health Issue</Text>
-      <TextInput
-        style={[styles.input, { height: 80 }]}
-        placeholder="Describe your health issue"
-        multiline
-        value={healthIssue}
-        onChangeText={setHealthIssue}
-      />
+      {caseType === '' && (
+        <Text style={styles.noticeText}>Select a case type to proceed.</Text>
+      )}
 
-      {renderYesNoButtons(question1, setQuestion1, 'Do you have allergies?')}
-      {renderYesNoButtons(question2, setQuestion2, 'Are you currently on medication?')}
+      {caseType === 'emergency' && (
+        <View style={styles.emergencyBox}>
+          <Text style={styles.emergencyTitle}>Emergency case detected</Text>
+          <Text style={styles.emergencyText}>
+            Please call {EMERGENCY_PHONE_DISPLAY} immediately. If the situation is life-threatening, call 911 now.
+          </Text>
+          <TouchableOpacity style={styles.callButton} onPress={handleEmergencyCall}>
+            <Text style={styles.callButtonText}>Call {EMERGENCY_PHONE_DISPLAY}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-      <Button
-        title={loading ? 'Submitting...' : 'Submit'}
-        onPress={handleSubmit}
-        disabled={loading}
-      />
+      {caseType === 'non-emergency' && (
+        <>
+          <Text style={styles.label}>Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your full name"
+            value={name}
+            onChangeText={setName}
+          />
+
+          <Text style={styles.label}>Age</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your age"
+            keyboardType="numeric"
+            value={age}
+            onChangeText={setAge}
+          />
+
+          {renderGenderButtons(gender, setGender, 'Gender')}
+
+          <Text style={styles.label}>Health Issue</Text>
+          <TextInput
+            style={[styles.input, { height: 80 }]}
+            placeholder="Describe your health issue"
+            multiline
+            value={healthIssue}
+            onChangeText={setHealthIssue}
+          />
+
+          {renderYesNoButtons(question1, setQuestion1, 'Do you have allergies?')}
+          {renderYesNoButtons(question2, setQuestion2, 'Are you currently on medication?')}
+
+          <Button
+            title={loading ? 'Submitting...' : 'Submit'}
+            onPress={handleSubmit}
+            disabled={loading}
+          />
+        </>
+      )}
     </ScrollView>
   );
 }
@@ -187,14 +276,88 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 24,
+    marginBottom: 10,
     textAlign: 'center',
+  },
+  metaText: {
+    textAlign: 'center',
+    color: '#555',
+    marginBottom: 16,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     marginTop: 12,
     marginBottom: 6,
+  },
+  helperText: {
+    color: '#666',
+    marginBottom: 8,
+  },
+  caseTypeButtonGroup: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  caseTypeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#006747',
+    borderRadius: 6,
+    marginHorizontal: 6,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  caseTypeButtonEmergencySelected: {
+    backgroundColor: '#C62828',
+    borderColor: '#C62828',
+  },
+  caseTypeButtonNonEmergencySelected: {
+    backgroundColor: '#006747',
+    borderColor: '#006747',
+  },
+  caseTypeButtonText: {
+    color: '#006747',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  caseTypeButtonTextSelected: {
+    color: '#fff',
+  },
+  noticeText: {
+    marginBottom: 8,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  emergencyBox: {
+    borderWidth: 1,
+    borderColor: '#C62828',
+    backgroundColor: '#FFF1F1',
+    borderRadius: 8,
+    padding: 14,
+    marginTop: 6,
+    marginBottom: 12,
+  },
+  emergencyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#A11A1A',
+    marginBottom: 8,
+  },
+  emergencyText: {
+    color: '#7A1A1A',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  callButton: {
+    backgroundColor: '#C62828',
+    borderRadius: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  callButtonText: {
+    color: '#fff',
+    fontWeight: '700',
   },
   input: {
     borderWidth: 1,

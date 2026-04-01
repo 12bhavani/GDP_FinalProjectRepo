@@ -4,7 +4,7 @@ import * as DocumentPicker from "expo-document-picker";
 // @ts-ignore - Using legacy API to avoid deprecation warnings
 import * as FileSystem from "expo-file-system/legacy";
 import { db } from "../../firebase/config";
-import { collection, getDocs, updateDoc, doc, addDoc } from "firebase/firestore";
+import { collection, getDocs, doc, addDoc, getDoc } from "firebase/firestore";
 import { supabase } from "../supabase/supabase";
 import Header from "../components/Header";
 
@@ -12,6 +12,7 @@ interface Appointment {
   time: string;
   email: string;
   reportUrl?: string;
+  caseType?: "emergency" | "non-emergency";
 }
 
 export default function ViewAppointments() {
@@ -25,26 +26,29 @@ export default function ViewAppointments() {
       const slotsSnapshot = await getDocs(collection(db, "slots"));
       const groupedData: Record<string, Appointment[]> = {};
 
-      slotsSnapshot.forEach((docSnap) => {
+      for (const docSnap of slotsSnapshot.docs) {
         const date = docSnap.id;
         const data = docSnap.data();
         const bookedSlots: Appointment[] = [];
 
-        Object.entries(data).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(data)) {
           if (typeof value === "string" && value === "booked") {
             const userKey = `${key}_user`;
             const email = data[userKey] || "Unknown";
             const reportKey = `${key}_reportUrl`;
             const reportUrl = data[reportKey] || null;
+            const detailDoc = await getDoc(doc(db, "slots", date, "details", `${key}_${date}`));
+            const detailData = detailDoc.exists() ? detailDoc.data() : {};
+            const caseType = detailData.caseType === "emergency" ? "emergency" : "non-emergency";
 
-            bookedSlots.push({ time: key, email, reportUrl });
+            bookedSlots.push({ time: key, email, reportUrl, caseType });
           }
-        });
+        }
 
         if (bookedSlots.length > 0) {
           groupedData[date] = bookedSlots;
         }
-      });
+      }
 
       setAppointments(groupedData);
     } catch (error) {
@@ -164,6 +168,9 @@ export default function ViewAppointments() {
             <View key={index} style={styles.appointmentCard}>
               <Text style={styles.text}>Time: {appt.time}</Text>
               <Text style={styles.text}>Email: {appt.email}</Text>
+              <Text style={styles.text}>
+                Case Type: {appt.caseType === "emergency" ? "Emergency" : "Non-Emergency"}
+              </Text>
               {appt.reportUrl ? (
                 <Text style={{ color: "green" }}>📄 Report uploaded</Text>
               ) : (

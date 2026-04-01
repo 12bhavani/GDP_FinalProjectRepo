@@ -18,6 +18,11 @@ export default function AppointmentDetails() {
         <View style={styles.card}>
           <DetailRow label="Date" value={appointment.date} />
           <DetailRow label="Time" value={appointment.time} />
+          <DetailRow
+            label="Case Type"
+            value={appointment.caseType === 'emergency' ? 'Emergency' : 'Non-Emergency'}
+            highlight={appointment.caseType === 'emergency' ? 'red' : '#006747'}
+          />
           <DetailRow label="Health Issue" value={appointment.healthIssue} />
           <DetailRow
             label="Status"

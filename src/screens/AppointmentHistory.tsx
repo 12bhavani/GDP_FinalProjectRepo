@@ -48,6 +48,7 @@ export default function AppointmentHistory() {
                 date,
                 time: slotName,
                 status: detailData.status || 'booked',
+                caseType: detailData.caseType || 'non-emergency',
                 healthIssue: detailData.healthIssue || 'No health issue provided',
                 doctor: detailData.doctor || 'Not assigned',
                 notes: detailData.notes || 'No notes',
@@ -106,6 +107,9 @@ export default function AppointmentHistory() {
     return <Text style={{ color, fontWeight: '600' }}>Status: {status}</Text>;
   };
 
+  const formatCaseType = (caseType: string) =>
+    caseType === 'emergency' ? 'Emergency' : 'Non-Emergency';
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       {/* ✅ Fixed Header outside scroll area */}
@@ -125,6 +129,7 @@ export default function AppointmentHistory() {
             >
               <Text style={styles.date}>{app.date}</Text>
               <Text style={styles.time}>{app.time}</Text>
+              <Text>Case Type: {formatCaseType(app.caseType)}</Text>
               <Text>Health Issue: {app.healthIssue}</Text>
               {renderStatus(app.status)}
             </TouchableOpacity>
@@ -145,6 +150,7 @@ export default function AppointmentHistory() {
             >
               <Text style={styles.date}>{app.date}</Text>
               <Text style={styles.time}>{app.time}</Text>
+              <Text>Case Type: {formatCaseType(app.caseType)}</Text>
               <Text>Health Issue: {app.healthIssue}</Text>
               {renderStatus(app.status)}
             </TouchableOpacity>
