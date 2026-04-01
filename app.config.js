@@ -16,6 +16,7 @@ module.exports = {
     android: {
       package: 'com.metahub',
     },
+    plugins: ['@react-native-firebase/app', 'expo-asset'],
     extra: {
       eas: {
         projectId: 'eb7b4461-08b7-4a6f-b255-d99efdfadc55',
