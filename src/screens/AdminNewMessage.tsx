@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { db, auth } from '../../firebase/config';
 import { addDoc, collection, getDocs } from 'firebase/firestore';
@@ -93,51 +93,60 @@ const AdminNewMessage: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 0 }}>
+    <View style={styles.screen}>
       <Header title="Compose a New Message" />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Recipient Email"
-        value={recipientEmail}
-        onChangeText={setRecipientEmail}
-        autoCapitalize="none"
-      />
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Text style={styles.label}>Recipient Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Recipient Email"
+            value={recipientEmail}
+            onChangeText={setRecipientEmail}
+            autoCapitalize="none"
+            placeholderTextColor="#94A3B8"
+          />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Subject"
-        value={subject}
-        onChangeText={setSubject}
-      />
+          <Text style={styles.label}>Subject</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Subject"
+            value={subject}
+            onChangeText={setSubject}
+            placeholderTextColor="#94A3B8"
+          />
 
-      <TextInput
-        style={[styles.input, { height: 80 }]}
-        placeholder="Message Body"
-        value={body}
-        onChangeText={setBody}
-        multiline
-      />
+          <Text style={styles.label}>Message</Text>
+          <TextInput
+            style={[styles.input, styles.messageInput]}
+            placeholder="Message Body"
+            value={body}
+            onChangeText={setBody}
+            placeholderTextColor="#94A3B8"
+            multiline
+          />
+        </View>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-  <TouchableOpacity
-    style={[styles.sendButton, loading && { opacity: 0.6, flex: 1, marginRight: 10 }]}
-    onPress={handleSendMessage}
-    disabled={loading}
-  >
-    <Text style={styles.sendButtonText}>
-      {loading ? 'Sending...' : 'Send Message'}
-    </Text>
-  </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[styles.sendButton, loading && { opacity: 0.6 }]}
+            onPress={handleSendMessage}
+            disabled={loading}
+          >
+            <Text style={styles.sendButtonText}>
+              {loading ? 'Sending...' : 'Send Message'}
+            </Text>
+          </TouchableOpacity>
 
-  <TouchableOpacity
-    style={[styles.backButton, { flex: 1, marginLeft: 10 }]}
-    onPress={() => navigation.goBack()}
-  >
-    <Text style={styles.backText}>Cancel</Text>
-  </TouchableOpacity>
-</View>
-
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -145,33 +154,71 @@ const AdminNewMessage: React.FC = () => {
 export default AdminNewMessage;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 20 },
-  heading: { fontSize: 24, fontWeight: '700', color: '#007AFF', marginBottom: 20 },
+  screen: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  container: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 16,
+  },
+  label: {
+    fontSize: 13,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 10,
+    marginBottom: 8,
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    marginTop:4,
-    marginBottom: 4,
+    borderColor: '#CBD5E1',
+    borderRadius: 10,
+    padding: 12,
+    backgroundColor: '#fff',
     fontSize: 16,
+    color: '#0F172A',
+  },
+  messageInput: {
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    gap: 12,
   },
   sendButton: {
-    backgroundColor: '#007AFF',
-    marginTop:-10,
-    paddingVertical: 17,
-    paddingHorizontal:35,
-    borderRadius: 25,
+    flex: 1,
+    backgroundColor: '#006747',
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
-  sendButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  sendButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
   backButton: {
-    backgroundColor: '#f4f4f4',
-    marginTop:-10,
-    paddingVertical: 17,
-    paddingHorizontal:35,
-    borderRadius: 25,
+    flex: 1,
+    backgroundColor: '#E2E8F0',
+    paddingVertical: 14,
+    borderRadius: 10,
     alignItems: 'center',
   },
-  backText: { fontSize: 16, color: '#333', fontWeight: '500' },
+  backText: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '700',
+  },
 });

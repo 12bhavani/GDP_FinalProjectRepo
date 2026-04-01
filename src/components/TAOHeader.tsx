@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+
+const TAO_BANNER_RATIO = 1924 / 626;
  
 type HeaderProps = {
   title: string;
@@ -37,24 +39,30 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#006747',
     paddingTop: 50,
+    paddingHorizontal: 0,
+    paddingBottom: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backButton: {
     position: 'absolute',
-    left: 15,
-    top: 55,
+    left: 14,
+    top: 56,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    borderRadius: 18,
+    padding: 4,
     zIndex: 1,
   },
   headerImage: {
     width: '100%',
-    height: 118,
-    marginBottom: 15,
+    aspectRatio: TAO_BANNER_RATIO,
+    marginBottom: 8,
+    borderRadius: 0,
   },
   headerText: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '600',
-    paddingBottom: 20,
+    paddingBottom: 2,
   },
 });

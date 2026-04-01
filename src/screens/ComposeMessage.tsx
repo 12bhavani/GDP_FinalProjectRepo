@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  SafeAreaView,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -59,46 +59,55 @@ const ComposeMessage: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <Header title="Compose Message" />
-      <View style={styles.buttons}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Text style={styles.label}>Recipient</Text>
+          <View style={styles.recipientChip}>
+            <Text style={styles.recipientText}>{recipient}</Text>
+          </View>
+
+          <Text style={styles.label}>Subject</Text>
+          <TextInput
+            style={styles.input}
+            value={subject}
+            onChangeText={setSubject}
+            placeholder="Enter subject"
+            placeholderTextColor="#94A3B8"
+            multiline
+            blurOnSubmit={false}
+            autoCorrect={true}
+            autoCapitalize="sentences"
+            keyboardType="default"
+            textAlignVertical="top"
+          />
+
+          <Text style={styles.label}>Message</Text>
+          <TextInput
+            style={[styles.input, styles.messageInput]}
+            value={body}
+            onChangeText={setBody}
+            placeholder="Write your message..."
+            placeholderTextColor="#94A3B8"
+            multiline
+            blurOnSubmit={false}
+            autoCorrect={true}
+            autoCapitalize="sentences"
+            keyboardType="default"
+            textAlignVertical="top"
+          />
+        </View>
+
+        <View style={styles.buttons}>
           <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
             <Text style={styles.buttonText}>Send</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.buttonText}>Cancel</Text>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
-      <View style={{ padding: 20 }}>
-        <Text style={styles.label}>Recipient: {recipient}</Text>
-        <Text style={styles.label}>Subject:</Text>
-        <TextInput
-          style={styles.input}
-          value={subject}
-          onChangeText={setSubject}
-          placeholder="Enter subject"
-          multiline
-          blurOnSubmit={false}
-          autoCorrect={true}
-          autoCapitalize="sentences"
-          keyboardType="default"
-          textAlignVertical="top"
-        />
-        <Text style={styles.label}>Message:</Text>
-        <TextInput
-          style={[styles.input, { height: 100 }]} 
-          value={body}
-          onChangeText={setBody}
-          placeholder="Write your message..."
-          multiline
-          blurOnSubmit={false}
-          autoCorrect={true}
-          autoCapitalize="sentences"
-          keyboardType="default"
-          textAlignVertical="top"
-        />
-        
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -106,70 +115,86 @@ const ComposeMessage: React.FC = () => {
 export default ComposeMessage;
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+    backgroundColor: '#F8FAFC',
   },
-  heading: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#007AFF',
-    marginVertical: 15,
-    textAlign: 'center',
-    padding: 20,
+  container: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 16,
   },
   label: {
-    fontSize: 18,
+    fontSize: 13,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
     fontWeight: '600',
-    marginTop: 5,
-    color: '#333',
-    
+    marginBottom: 8,
+    color: '#64748B',
+    marginTop: 12,
   },
-  value: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 10,
-    color: '#555',
+  recipientChip: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#E6F7FF',
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  recipientText: {
+    color: '#006747',
+    fontWeight: '700',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#CBD5E1',
     borderRadius: 10,
     padding: 12,
-    marginTop: 5,
     backgroundColor: '#fff',
     fontSize: 16,
-    textAlignVertical: 'top', // ensures multiline input starts at top
+    color: '#0F172A',
+    textAlignVertical: 'top',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 1,
   },
+  messageInput: {
+    minHeight: 130,
+  },
   buttons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 30,
+    marginTop: 14,
+    gap: 12,
   },
   sendButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#006747',
     paddingVertical: 14,
-    paddingHorizontal: 25,
     borderRadius: 10,
     flex: 1,
-    marginRight: 10,
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#E2E8F0',
     paddingVertical: 14,
-    paddingHorizontal: 25,
     borderRadius: 10,
     flex: 1,
-    marginLeft: 10,
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
+  },
+  cancelButtonText: {
+    color: '#1F2937',
     fontWeight: '700',
     fontSize: 16,
   },

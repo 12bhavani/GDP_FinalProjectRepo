@@ -4,6 +4,7 @@ import { db } from '../../firebase/config';
 import { collection, getDocs } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import Header from '../components/Header';
+import { formatDateToMDY } from '../utils/dateFormat';
 
 interface HealthReportItem {
   id: string;
@@ -114,7 +115,7 @@ const HealthReports = () => {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.date}>{item.date}</Text>
+              <Text style={styles.date}>{formatDateToMDY(item.date)}</Text>
               {item.appointmentTime && (
                 <Text style={styles.time}>Time: {item.appointmentTime}</Text>
               )}

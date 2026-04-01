@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Button, Alert } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Button, ScrollView, StyleSheet, Text, View } from "react-native";
 // @ts-ignore - Using legacy API to avoid deprecation warnings
 import * as FileSystem from "expo-file-system/legacy";
+import { addDoc, collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { collection, getDocs, doc, addDoc, getDoc } from "firebase/firestore";
-import { supabase } from "../supabase/supabase";
 import Header from "../components/Header";
+import { supabase } from "../supabase/supabase";
+import { formatDateToMDY } from "../utils/dateFormat";
 
 interface Appointment {
   time: string;
@@ -128,7 +129,7 @@ export default function ViewAppointments() {
       await addDoc(reportsRef, {
         date: date,
         fileUrl: fileUrl,
-        description: `Health report for appointment on ${date} at ${time}`,
+        description: `Health report for appointment on ${formatDateToMDY(date)} at ${time}`,
       });
 
       Alert.alert("✅ Upload Successful", "Report uploaded and saved successfully!");
@@ -163,7 +164,7 @@ export default function ViewAppointments() {
 
       {Object.keys(appointments).map((date) => (
         <View key={date} style={styles.groupContainer}>
-          <Text style={styles.dateHeader}>{date}</Text>
+          <Text style={styles.dateHeader}>{formatDateToMDY(date)}</Text>
           {appointments[date].map((appt, index) => (
             <View key={index} style={styles.appointmentCard}>
               <Text style={styles.text}>Time: {appt.time}</Text>

@@ -1,8 +1,9 @@
 // src/screens/AppointmentDetails.tsx
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRoute } from '@react-navigation/native';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Header from '../components/Header';
+import { formatDateToMDY } from '../utils/dateFormat';
 
 export default function AppointmentDetails() {
   const route = useRoute<any>();
@@ -16,18 +17,16 @@ export default function AppointmentDetails() {
       <ScrollView contentContainerStyle={styles.body}>
         {/* ✅ Card for appointment info */}
         <View style={styles.card}>
-          <DetailRow label="Date" value={appointment.date} />
+          <DetailRow label="Date" value={formatDateToMDY(appointment.date)} />
           <DetailRow label="Time" value={appointment.time} />
           <DetailRow
             label="Case Type"
             value={appointment.caseType === 'emergency' ? 'Emergency' : 'Non-Emergency'}
-            highlight={appointment.caseType === 'emergency' ? 'red' : '#006747'}
           />
           <DetailRow label="Health Issue" value={appointment.healthIssue} />
           <DetailRow
             label="Status"
             value={appointment.status}
-            highlight={appointment.status === 'declined' ? 'red' : '#006747'}
           />
           <DetailRow label="Doctor" value={appointment.doctor} />
           <DetailRow label="Notes" value={appointment.notes || '—'} />
@@ -41,15 +40,13 @@ export default function AppointmentDetails() {
 const DetailRow = ({
   label,
   value,
-  highlight,
 }: {
   label: string;
   value: string;
-  highlight?: string;
 }) => (
   <View style={styles.row}>
     <Text style={styles.label}>{label}</Text>
-    <Text style={[styles.value, highlight ? { color: highlight } : {}]}>
+    <Text style={styles.value}>
       {value}
     </Text>
   </View>
@@ -79,7 +76,7 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 16,
-    color: '#333',
+    color: '#000',
     marginTop: 2,
   },
 });

@@ -19,6 +19,7 @@ import { auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { formatDateToMDY } from '../utils/dateFormat';
 
 type CalendarScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Calendar'>;
 
@@ -128,7 +129,7 @@ export default function CalendarScreen() {
 
         {selectedDate && (
           <>
-            <Text style={styles.subtitle}>Available Slots for {selectedDate}:</Text>
+            <Text style={styles.subtitle}>Available Slots for {formatDateToMDY(selectedDate)}:</Text>
 
             {loadingSlots ? (
               <ActivityIndicator style={{ marginTop: 20 }} />

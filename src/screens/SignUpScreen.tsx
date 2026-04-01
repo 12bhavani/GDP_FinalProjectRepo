@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { db, auth } from '../../firebase/config';
 import { doc, setDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -25,6 +26,7 @@ const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const onRegister = async () => {
     const trimmedEmail = email.trim().toLowerCase();
@@ -103,13 +105,26 @@ const SignUpScreen: React.FC = () => {
           keyboardType="phone-pad"
           maxLength={10}
         />
-        <TextInput
-          placeholder="Password"
-          style={styles.input}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            placeholder="Password"
+            style={styles.passwordInput}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(prev => !prev)}
+            style={styles.eyeButton}
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              size={22}
+              color="#64748B"
+            />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity onPress={onRegister} style={styles.register}>
           <Text style={styles.registerText}>Register</Text>
         </TouchableOpacity>
@@ -131,6 +146,25 @@ const styles = StyleSheet.create({
     width: '90%',
     marginTop: 20,
     height: 50,
+  },
+  passwordContainer: {
+    borderWidth: 1,
+    borderColor: 'grey',
+    borderRadius: 5,
+    width: '90%',
+    marginTop: 20,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    height: '100%',
+  },
+  eyeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   register: {
     width: '90%',

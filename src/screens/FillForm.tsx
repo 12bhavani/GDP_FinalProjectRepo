@@ -4,7 +4,6 @@ import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import {
     Alert,
-    Button,
     Linking,
     ScrollView,
     StyleSheet,
@@ -15,6 +14,7 @@ import {
 } from 'react-native';
 import { auth, db } from '../../firebase/config';
 import { RootStackParamList } from '../types/navigation';
+import { formatDateToMDY } from '../utils/dateFormat';
 
 type HealthFormScreenRouteProp = RouteProp<RootStackParamList, 'Form'>;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -165,7 +165,7 @@ export default function HealthFormScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Health Form</Text>
-      <Text style={styles.metaText}>Date: {date} | Slot: {slot}</Text>
+      <Text style={styles.metaText}>Date: {formatDateToMDY(date)} | Slot: {slot}</Text>
 
       <Text style={styles.label}>Case Type</Text>
       <Text style={styles.helperText}>
@@ -257,11 +257,13 @@ export default function HealthFormScreen() {
           {renderYesNoButtons(question1, setQuestion1, 'Do you have allergies?')}
           {renderYesNoButtons(question2, setQuestion2, 'Are you currently on medication?')}
 
-          <Button
-            title={loading ? 'Submitting...' : 'Submit'}
+          <TouchableOpacity
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
-          />
+          >
+            <Text style={styles.submitButtonText}>{loading ? 'Submitting...' : 'Submit'}</Text>
+          </TouchableOpacity>
         </>
       )}
     </ScrollView>
@@ -393,5 +395,20 @@ const styles = StyleSheet.create({
   },
   selectedButtonText: {
     color: 'white',
+  },
+  submitButton: {
+    marginTop: 24,
+    backgroundColor: '#006747',
+    borderRadius: 8,
+    paddingVertical: 13,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#7EB5A2',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

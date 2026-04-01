@@ -16,6 +16,7 @@ import {
 import { auth, db } from '../../firebase/config';
 import Header from '../components/Header';
 import { GEMINI_CONFIG, MENTAL_HEALTH_PROMPT } from '../config/gemini.config';
+import { formatDateToMDY } from '../utils/dateFormat';
  
 const uniqueId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -318,7 +319,7 @@ export default function ChatbotScreen(): React.JSX.Element {
       } else {
   let appointmentText = '📅 Your Upcoming Appointments:\n\n';
         upcoming.forEach((app, idx) => {
-          appointmentText += `${idx + 1}. ${app.date} at ${app.time}\n`;
+          appointmentText += `${idx + 1}. ${formatDateToMDY(app.date)} at ${app.time}\n`;
           appointmentText += `   Doctor: ${app.doctor}\n`;
           appointmentText += `   Status: ${app.status}\n\n`;
         });

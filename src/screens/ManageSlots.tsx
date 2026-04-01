@@ -6,6 +6,7 @@ import { Calendar } from 'react-native-calendars';
 import { db } from '../../firebase/config';
 import { doc, getDoc, setDoc, deleteField, deleteDoc } from 'firebase/firestore';
 import moment from 'moment';
+import { formatDateToMDY } from '../utils/dateFormat';
 
 const timeSlots = [
   '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -197,7 +198,7 @@ const ManageSlots = () => {
         <ActivityIndicator size="large" color="purple" />
       ) : selectedDate ? (
         <>
-          <Text style={styles.subtitle}>Slots for {selectedDate}</Text>
+          <Text style={styles.subtitle}>Slots for {formatDateToMDY(selectedDate)}</Text>
           {filteredSlots.length > 0 ? (
             <View style={styles.slotsGrid}>
               {filteredSlots.map(slot => (
