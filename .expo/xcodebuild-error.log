@@ -1,0 +1,7 @@
+** BUILD FAILED **
+
+
+The following build commands failed:
+	ScanDependencies /Users/chanakya/Library/Developer/Xcode/DerivedData/metaHub-bbqnazkquruceealunzimvvpvbiz/Build/Intermediates.noindex/Pods.build/Debug-iphonesimulator/RNFBAuth.build/Objects-normal/arm64/RNFBAuthModule.o /Users/chanakya/GDP_FinalProjectRepo/node_modules/@react-native-firebase/auth/ios/RNFBAuth/RNFBAuthModule.m normal arm64 objective-c com.apple.compilers.llvm.clang.1_0.compiler (in target 'RNFBAuth' from project 'Pods')
+	Building workspace metaHub with scheme metaHub and configuration Debug
+(2 failures)
