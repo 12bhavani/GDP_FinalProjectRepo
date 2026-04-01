@@ -43,11 +43,10 @@ const TAO = () => {
   };
  
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
-        <Header title="Therapy Assistance Online (TAO)" showBack={true} />
-      </View>
+    <View style={styles.screen}>
+      <Header title="Therapy Assistance Online (TAO)" showBack={true} />
+
+      <ScrollView style={styles.container}>
  
       {/* Content Section */}
       <View style={styles.contentSection}>
@@ -200,22 +199,27 @@ const TAO = () => {
         </Text>
       </View>
  
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          © 2025 Wellness Services | Therapy Assistance Online (TAO)
-        </Text>
-        <Text style={styles.footerText}>
-          This page is based on content from Northwest Missouri State
-          University's TAO page.
-        </Text>
-      </View>
-    </ScrollView>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            © 2025 Wellness Services | Therapy Assistance Online (TAO)
+          </Text>
+          <Text style={styles.footerText}>
+            This page is based on content from Northwest Missouri State
+            University's TAO page.
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
  
 // ✅ Styles
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',

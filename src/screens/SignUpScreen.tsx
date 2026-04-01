@@ -80,64 +80,67 @@ const SignUpScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <View style={styles.screen}>
       <Header title="Sign Up" />
-      <View style={styles.container}>
-        <TextInput
-          placeholder="Full Name"
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <TextInput
-          placeholder="Phone Number"
-          style={styles.input}
-          value={phone}
-          onChangeText={handlePhoneChange}
-          keyboardType="phone-pad"
-          maxLength={10}
-        />
-        <View style={styles.passwordContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
           <TextInput
-            placeholder="Password"
-            style={styles.passwordInput}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
+            placeholder="Full Name"
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
           />
-          <TouchableOpacity
-            onPress={() => setShowPassword(prev => !prev)}
-            style={styles.eyeButton}
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={22}
-              color="#64748B"
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <TextInput
+            placeholder="Phone Number"
+            style={styles.input}
+            value={phone}
+            onChangeText={handlePhoneChange}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              placeholder="Password"
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
             />
+            <TouchableOpacity
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity onPress={onRegister} style={styles.register}>
+            <Text style={styles.registerText}>Register</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={onRegister} style={styles.register}>
-          <Text style={styles.registerText}>Register</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 export default SignUpScreen;
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#fff' },
   scrollContainer: { flexGrow: 1, backgroundColor: '#fff' },
-  container: { padding: 16, justifyContent: 'center', alignItems: 'center' },
+  container: { padding: 16, justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: 500 },
   input: {
     borderWidth: 1,
     borderColor: 'grey',

@@ -1,13 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const WELLNESS_BANNER_RATIO = 1280 / 367;
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Original image is 1280 x 367
+const IMAGE_WIDTH = SCREEN_WIDTH;
+const IMAGE_HEIGHT = SCREEN_WIDTH * (367 / 1280);
 
 type HeaderProps = {
   title: string;
-  showBack?: boolean;  // 👈 new prop
+  showBack?: boolean;
 };
 
 const Header = ({ title, showBack = true }: HeaderProps) => {
@@ -26,7 +29,7 @@ const Header = ({ title, showBack = true }: HeaderProps) => {
       <Image
         source={require('../../assets/wellness_logo.png')}
         style={styles.headerImage}
-        resizeMode="contain"
+        resizeMode="stretch"
       />
       <Text style={styles.headerText}>{title}</Text>
     </View>
@@ -54,10 +57,9 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerImage: {
-    width: '100%',
-    aspectRatio: WELLNESS_BANNER_RATIO,
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
     marginBottom: 8,
-    borderRadius: 0,
   },
   headerText: {
     color: '#fff',

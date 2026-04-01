@@ -80,60 +80,63 @@ const LoginScreen: React.FC = () => {
   const onSignUp = () => navigation.navigate('SignUp');
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+    <View style={styles.screen}>
       <Header title="Login" />
-      <View style={[styles.container, { marginTop: -300 }]}>
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <View style={[styles.passwordContainer, { marginTop: 16 }]}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
           <TextInput
-            placeholder="Password"
-            style={styles.passwordInput}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
+            placeholder="Email"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
           />
-          <TouchableOpacity
-            onPress={() => setShowPassword(prev => !prev)}
-            style={styles.eyeButton}
-            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-          >
-            <Ionicons
-              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-              size={22}
-              color="#64748B"
+
+          <View style={[styles.passwordContainer, { marginTop: 16 }] }>
+            <TextInput
+              placeholder="Password"
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
             />
+            <TouchableOpacity
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, submitting && { opacity: 0.6 }]}
+            onPress={onLogin}
+            disabled={submitting}
+          >
+            {submitting ? <ActivityIndicator /> : <Text style={styles.buttonText}>Login</Text>}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.linkButton} onPress={onSignUp} disabled={submitting}>
+            <Text style={styles.linkText}>Don&apos;t have an account? Sign Up</Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={[styles.button, submitting && { opacity: 0.6 }]}
-          onPress={onLogin}
-          disabled={submitting}
-        >
-          {submitting ? <ActivityIndicator /> : <Text style={styles.buttonText}>Login</Text>}
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.linkButton} onPress={onSignUp} disabled={submitting}>
-          <Text style={styles.linkText}>Don&apos;t have an account? Sign Up</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#fff' },
   scrollContainer: { flexGrow: 1, backgroundColor: '#fff' },
-  container: { padding: 20, justifyContent: 'center', flex: 1 },
+  container: { padding: 20, justifyContent: 'center', flex: 1, minHeight: 420 },
   input: {
     borderWidth: 1,
     borderColor: 'grey',
