@@ -140,7 +140,7 @@ export default SignUpScreen;
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#fff' },
   scrollContainer: { flexGrow: 1, backgroundColor: '#fff' },
-  container: { padding: 16, justifyContent: 'center', alignItems: 'center', flex: 1, minHeight: 500 },
+  container: { padding: 16, paddingTop: 20, justifyContent: 'flex-start', alignItems: 'center', flex: 1 },
   input: {
     borderWidth: 1,
     borderColor: 'grey',
