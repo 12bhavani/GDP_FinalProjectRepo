@@ -1,26 +1,26 @@
 // src/screens/LoginPage.tsx
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import Header from '../components/Header';
 import {
-  HARDCODED_ADMIN_CREDENTIALS,
-  isHardcodedAdminLogin,
+    HARDCODED_ADMIN_CREDENTIALS,
+    isHardcodedAdminLogin,
 } from '../config/adminCredentials';
+import { RootStackParamList } from '../types/navigation';
 
-import { auth } from '../../firebase/config';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../firebase/config';
 
 type LoginScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
