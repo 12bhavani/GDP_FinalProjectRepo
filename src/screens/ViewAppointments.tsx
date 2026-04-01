@@ -3,8 +3,10 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Button, ScrollView, StyleSheet, Text, View } from "react-native";
 // @ts-ignore - Using legacy API to avoid deprecation warnings
 import * as FileSystem from "expo-file-system/legacy";
-import { addDoc, collection, doc, getDoc, getDocs } from "firebase/firestore";
-import { db } from "../../firebase/config";
+import { decode } from "base64-arraybuffer";
+import { addDoc, collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadString } from 'firebase/storage';
+import { db, storage } from '../../firebase/config';
 import Header from "../components/Header";
 import { supabase } from "../supabase/supabase";
 import { formatDateToMDY } from "../utils/dateFormat";
@@ -20,6 +22,17 @@ export default function ViewAppointments() {
   const [appointments, setAppointments] = useState<Record<string, Appointment[]>>({});
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  const sanitizeStorageSegment = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '_')
+      .replace(/_+/g, '_');
+
+  const shouldFallbackToFirebase = (message: string) =>
+    /network request failed/i.test(message) ||
+    /creating blobs from 'arraybuffer' and 'arraybufferview' are not supported/i.test(message);
 
   const fetchAppointments = async () => {
     try {
@@ -78,24 +91,23 @@ export default function ViewAppointments() {
       setUploading(true);
 
       const fileUri = file.assets[0].uri;
-      const fileExtension = file.assets[0].name?.split('.').pop() || 'pdf';
+      const pickedName = file.assets[0].name || 'report.pdf';
+      const fileExtension = pickedName.split('.').pop() || 'pdf';
       
-      // Create a unique filename for Supabase storage
-      const fileName = `${date}_${time}_${email.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.${fileExtension}`;
+      // Create a URL-safe object key for Supabase storage.
+      const safeDate = sanitizeStorageSegment(date);
+      const safeTime = sanitizeStorageSegment(time);
+      const safeEmail = sanitizeStorageSegment(email);
+      const safeExt = sanitizeStorageSegment(fileExtension) || 'pdf';
+      const fileName = `reports/${safeDate}_${safeTime}_${safeEmail}_${Date.now()}.${safeExt}`;
 
       // Step 2: Read the file as base64 (React Native compatible)
       const base64 = await FileSystem.readAsStringAsync(fileUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Step 3: Convert base64 to ArrayBuffer for Supabase
-      // Convert base64 string to byte array
-      const byteCharacters = atob(base64);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
+      // Step 3: Convert base64 to ArrayBuffer for Supabase (React Native-safe)
+      const arrayBuffer = decode(base64);
 
       // Step 4: Determine content type
       const contentType = fileExtension === 'pdf' 
@@ -103,24 +115,43 @@ export default function ViewAppointments() {
         : file.assets[0].mimeType || 'application/octet-stream';
 
       // Step 5: Upload file to Supabase Storage bucket "health-reports"
-      // Supabase accepts ArrayBuffer/Uint8Array in React Native
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("health-reports")
-        .upload(fileName, byteArray, {
-          contentType: contentType,
-          upsert: true, // Overwrite if file exists
-        });
+      // Retry once if device network flakes during upload.
+      let uploadError: any = null;
+      let fileUrl = '';
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const result = await supabase.storage
+          .from('health-reports')
+          .upload(fileName, arrayBuffer, {
+            contentType: contentType,
+            upsert: true,
+          });
 
-      if (uploadError) {
-        throw uploadError;
+        uploadError = result.error;
+        if (!uploadError) {
+          break;
+        }
+
+        const isNetworkError = /network request failed/i.test(uploadError.message || '');
+        if (!isNetworkError || attempt === 2) {
+          break;
+        }
       }
 
-      // Step 6: Get the public URL of the uploaded file
-      const { data: publicData } = supabase.storage
-        .from("health-reports")
-        .getPublicUrl(fileName);
-
-      const fileUrl = publicData.publicUrl;
+      if (!uploadError) {
+        // Step 6A: Supabase upload succeeded.
+        const { data: publicData } = supabase.storage
+          .from('health-reports')
+          .getPublicUrl(fileName);
+        fileUrl = publicData.publicUrl;
+      } else if (shouldFallbackToFirebase(uploadError.message || '')) {
+        // Step 6B: Fallback to Firebase Storage if Supabase host is unreachable
+        // or this runtime does not support the binary body type used by Supabase upload.
+        const firebaseRef = ref(storage, `health-reports/${fileName}`);
+        await uploadString(firebaseRef, base64, 'base64', { contentType });
+        fileUrl = await getDownloadURL(firebaseRef);
+      } else {
+        throw uploadError;
+      }
 
       // Step 7: Save file URL to Firestore in the nested structure
       // Structure: healthReports/{userEmail}/reports/{reportId}
@@ -132,13 +163,28 @@ export default function ViewAppointments() {
         description: `Health report for appointment on ${formatDateToMDY(date)} at ${time}`,
       });
 
+      // Persist report URL in slot document so admin list shows "Report uploaded" immediately.
+      await setDoc(
+        doc(db, 'slots', date),
+        { [`${time}_reportUrl`]: fileUrl },
+        { merge: true }
+      );
+
       Alert.alert("✅ Upload Successful", "Report uploaded and saved successfully!");
       
       // Step 8: Refresh the appointments list to show updated status
       await fetchAppointments();
     } catch (error: any) {
       console.error("Upload error:", error);
-      Alert.alert("❌ Upload Failed", error.message || "Something went wrong. Please try again.");
+      const message = error?.message || 'Something went wrong. Please try again.';
+      if (shouldFallbackToFirebase(message)) {
+        Alert.alert(
+          '❌ Upload Failed',
+          'Cloud upload could not complete in this environment. Please retry. If it continues, check app network access and storage configuration.'
+        );
+      } else {
+        Alert.alert('❌ Upload Failed', message);
+      }
     } finally {
       setUploading(false);
     }

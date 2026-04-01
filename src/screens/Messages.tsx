@@ -1,5 +1,5 @@
 // src/screens/Messages.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { db } from '../../firebase/config';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, doc, getDocs, limit, query, updateDoc, where } from 'firebase/firestore';
 import { auth } from '../../firebase/config';
 import { useNavigation } from '@react-navigation/native';
 import CustomHeader from '../components/Header';
@@ -35,22 +35,61 @@ const Messages: React.FC = () => {
   const navigation = useNavigation<any>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resolvingUser, setResolvingUser] = useState(true);
   const [activeTab, setActiveTab] = useState<'Inbox' | 'Sent'>('Inbox');
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
+  const [effectiveUser, setEffectiveUser] = useState<{ uid: string; email: string } | null>(null);
 
-  const user = auth.currentUser;
-  const isAdmin = user?.email === adminEmail;
+  const isAdmin = effectiveUser?.email === adminEmail;
+
+  const resolveEffectiveUser = async () => {
+    setResolvingUser(true);
+    try {
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser?.uid) {
+        setEffectiveUser({
+          uid: firebaseUser.uid,
+          email: (firebaseUser.email || '').trim().toLowerCase(),
+        });
+        return;
+      }
+
+      // Hardcoded admin login path can skip Firebase auth, so resolve admin UID by email.
+      const adminQuery = query(
+        collection(db, 'users'),
+        where('email', '==', adminEmail),
+        limit(1)
+      );
+      const adminSnap = await getDocs(adminQuery);
+
+      if (!adminSnap.empty) {
+        setEffectiveUser({ uid: adminSnap.docs[0].id, email: adminEmail });
+      } else {
+        setEffectiveUser(null);
+      }
+    } catch (err) {
+      console.log(err);
+      setEffectiveUser(null);
+    } finally {
+      setResolvingUser(false);
+    }
+  };
 
   /** FETCH MESSAGES */
-  const fetchMessages = async (tab: 'Inbox' | 'Sent') => {
-    if (!user) return;
+  const fetchMessages = useCallback(async (tab: 'Inbox' | 'Sent') => {
     setLoading(true);
+
+    if (!effectiveUser) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const ref = collection(
         db,
         'users',
-        user.uid,
+        effectiveUser.uid,
         tab === 'Inbox' ? 'messages' : 'sentMessages'
       );
       const snap = await getDocs(ref);
@@ -94,11 +133,16 @@ const Messages: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [effectiveUser]);
 
   useEffect(() => {
+    resolveEffectiveUser();
+  }, []);
+
+  useEffect(() => {
+    if (resolvingUser) return;
     fetchMessages(activeTab);
-  }, [activeTab]);
+  }, [activeTab, resolvingUser, fetchMessages]);
 
   const formatMessageDate = (rawDate: string) => {
     if (!rawDate) return '';
@@ -115,9 +159,9 @@ const Messages: React.FC = () => {
 
   /** MARK AS READ */
   const markAsRead = async (id: string) => {
-    if (!user) return;
+    if (!effectiveUser) return;
     try {
-      await updateDoc(doc(db, 'users', user.uid, 'messages', id), { isRead: true });
+      await updateDoc(doc(db, 'users', effectiveUser.uid, 'messages', id), { isRead: true });
       setMessages(prev =>
         prev.map(m => (m.id === id ? { ...m, isRead: true } : m))
       );
@@ -209,7 +253,7 @@ const Messages: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <CustomHeader title="Secure Messages" />
 
-      {loading ? (
+      {loading || resolvingUser ? (
         <ActivityIndicator style={styles.loader} color="#006747" />
       ) : (
         <FlatList

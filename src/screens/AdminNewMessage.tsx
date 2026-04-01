@@ -10,9 +10,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { db, auth } from '../../firebase/config';
-import { addDoc, collection, getDocs } from 'firebase/firestore';
+import { addDoc, collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import Header from '../components/Header';
+
+const adminEmail = 'admin@gmail.com';
+
 const AdminNewMessage: React.FC = () => {
   const navigation = useNavigation<any>();
   const [recipientEmail, setRecipientEmail] = useState('');
@@ -22,7 +25,8 @@ const AdminNewMessage: React.FC = () => {
 
   const handleSendMessage = async () => {
     const sender = auth.currentUser;
-    if (!sender) return Alert.alert('Error', 'No logged-in user.');
+    let senderUid = sender?.uid || '';
+    let senderEmail = (sender?.email || '').trim().toLowerCase();
 
     if (!recipientEmail || !subject || !body) {
       Alert.alert('Please fill in all fields.');
@@ -31,6 +35,25 @@ const AdminNewMessage: React.FC = () => {
 
     setLoading(true);
     try {
+      if (!senderUid) {
+        // Hardcoded admin login path can skip Firebase auth, so resolve admin UID by email.
+        const adminQuery = query(
+          collection(db, 'users'),
+          where('email', '==', adminEmail),
+          limit(1)
+        );
+        const adminSnap = await getDocs(adminQuery);
+
+        if (adminSnap.empty) {
+          Alert.alert('Error', 'Admin profile not found in database.');
+          setLoading(false);
+          return;
+        }
+
+        senderUid = adminSnap.docs[0].id;
+        senderEmail = adminEmail;
+      }
+
       const usersSnap = await getDocs(collection(db, 'users'));
       let recipientUid: string | null = null;
 
@@ -60,8 +83,8 @@ const AdminNewMessage: React.FC = () => {
       }
 
       // Save message in admin → sentMessages
-      await addDoc(collection(db, 'users', sender.uid, 'sentMessages'), {
-        from: sender.email,
+      await addDoc(collection(db, 'users', senderUid, 'sentMessages'), {
+        from: senderEmail,
         to: recipientEmail,
         subject,
         body,
@@ -71,7 +94,7 @@ const AdminNewMessage: React.FC = () => {
 
       // Save message in recipient → messages
       await addDoc(collection(db, 'users', recipientUid, 'messages'), {
-        from: sender.email,
+        from: senderEmail,
         to: recipientEmail,
         subject,
         body,
