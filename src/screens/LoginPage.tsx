@@ -1,7 +1,7 @@
 // src/screens/LoginPage.tsx
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
@@ -20,6 +20,7 @@ import {
 } from '../config/adminCredentials';
 import { RootStackParamList } from '../types/navigation';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 
@@ -43,6 +44,7 @@ const LoginScreen: React.FC = () => {
       setSubmitting(true);
 
       if (isHardcodedAdminLogin(trimmedEmail, password)) {
+        await AsyncStorage.setItem('HARDCODED_ADMIN_V1', 'true');
         navigation.reset({
           index: 0,
           routes: [{ name: 'AdminDashboard' }],
@@ -86,6 +88,7 @@ const LoginScreen: React.FC = () => {
         <View style={styles.container}>
           <TextInput
             placeholder="Email"
+            placeholderTextColor="#000"
             style={styles.input}
             value={email}
             onChangeText={setEmail}
@@ -96,6 +99,7 @@ const LoginScreen: React.FC = () => {
           <View style={[styles.passwordContainer, { marginTop: 16 }] }>
             <TextInput
               placeholder="Password"
+              placeholderTextColor="#000"
               style={styles.passwordInput}
               value={password}
               onChangeText={setPassword}

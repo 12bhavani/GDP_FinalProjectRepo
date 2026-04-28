@@ -86,12 +86,14 @@ const SignUpScreen: React.FC = () => {
         <View style={styles.container}>
           <TextInput
             placeholder="Full Name"
+            placeholderTextColor="#000"
             style={styles.input}
             value={name}
             onChangeText={setName}
           />
           <TextInput
             placeholder="Email"
+            placeholderTextColor="#000"
             style={styles.input}
             value={email}
             onChangeText={setEmail}
@@ -100,6 +102,7 @@ const SignUpScreen: React.FC = () => {
           />
           <TextInput
             placeholder="Phone Number"
+            placeholderTextColor="#000"
             style={styles.input}
             value={phone}
             onChangeText={handlePhoneChange}
@@ -109,6 +112,7 @@ const SignUpScreen: React.FC = () => {
           <View style={styles.passwordContainer}>
             <TextInput
               placeholder="Password"
+              placeholderTextColor="#000"
               style={styles.passwordInput}
               value={password}
               onChangeText={setPassword}

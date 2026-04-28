@@ -1,6 +1,6 @@
 module.exports = {
   expo: {
-    name: 'metaHub',
+    name: 'Bearcat Welness',
     slug: 'metahub',
     version: '1.0.0',
     android: {

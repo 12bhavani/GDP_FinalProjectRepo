@@ -1,5 +1,6 @@
 // src/screens/AdminDashboard.tsx
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -25,10 +26,17 @@ export default function AdminDashboard() {
 
   const handlePress = (item: any) => {
     if (item.logout) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      (async () => {
+        try {
+          await AsyncStorage.removeItem('HARDCODED_ADMIN_V1');
+        } catch (e) {
+          // ignore
+        }
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      })();
     } else {
       navigation.navigate(item.screen);
     }
