@@ -21,7 +21,7 @@ import {
 import { RootStackParamList } from '../types/navigation';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
 
 type LoginScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -44,6 +44,7 @@ const LoginScreen: React.FC = () => {
       setSubmitting(true);
 
       if (isHardcodedAdminLogin(trimmedEmail, password)) {
+        await signOut(auth).catch(() => undefined);
         await AsyncStorage.setItem('HARDCODED_ADMIN_V1', 'true');
         navigation.reset({
           index: 0,
@@ -52,6 +53,7 @@ const LoginScreen: React.FC = () => {
         return;
       }
 
+      await AsyncStorage.removeItem('HARDCODED_ADMIN_V1').catch(() => undefined);
       await signInWithEmailAndPassword(auth, trimmedEmail, password);
 
       if (trimmedEmail === HARDCODED_ADMIN_CREDENTIALS.email) {
@@ -96,7 +98,7 @@ const LoginScreen: React.FC = () => {
             keyboardType="email-address"
           />
 
-          <View style={[styles.passwordContainer, { marginTop: 16 }] }>
+          <View style={[styles.passwordContainer, styles.passwordContainerSpaced]}>
             <TextInput
               placeholder="Password"
               placeholderTextColor="#000"
@@ -119,7 +121,7 @@ const LoginScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, submitting && { opacity: 0.6 }]}
+            style={[styles.button, submitting ? styles.buttonDisabled : null]}
             onPress={onLogin}
             disabled={submitting}
           >
@@ -155,6 +157,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  passwordContainerSpaced: {
+    marginTop: 16,
+  },
   passwordInput: {
     flex: 1,
     paddingHorizontal: 12,
@@ -170,6 +175,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     marginTop: 30,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: { color: '#000', fontWeight: '600', fontSize: 16 },
   linkButton: { marginTop: 20, alignItems: 'center' },

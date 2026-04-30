@@ -3,6 +3,9 @@ module.exports = {
     name: 'Bearcat Welness',
     slug: 'metahub',
     version: '1.0.0',
+    ios: {
+      bundleIdentifier: 'com.metahub',
+    },
     android: {
       package: 'com.metahub',
     },
