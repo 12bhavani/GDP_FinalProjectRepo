@@ -1,11 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// Original image is 1280 x 367
+const IMAGE_WIDTH = SCREEN_WIDTH;
+const IMAGE_HEIGHT = SCREEN_WIDTH * (367 / 1280);
 
 type HeaderProps = {
   title: string;
-  showBack?: boolean;  // 👈 new prop
+  showBack?: boolean;
 };
 
 const Header = ({ title, showBack = true }: HeaderProps) => {
@@ -24,7 +29,7 @@ const Header = ({ title, showBack = true }: HeaderProps) => {
       <Image
         source={require('../../assets/wellness_logo.png')}
         style={styles.headerImage}
-        resizeMode="contain"
+        resizeMode="stretch"
       />
       <Text style={styles.headerText}>{title}</Text>
     </View>
@@ -37,24 +42,29 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#006747',
     paddingTop: 50,
+    paddingHorizontal: 0,
+    paddingBottom: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backButton: {
     position: 'absolute',
-    left: 15,
-    top: 55,
+    left: 14,
+    top: 56,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    borderRadius: 18,
+    padding: 4,
     zIndex: 1,
   },
   headerImage: {
-    width: '100%',
-    height: 118,
-    marginBottom: 15,
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT,
+    marginBottom: 8,
   },
   headerText: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '600',
-    paddingBottom: 20,
+    paddingBottom: 2,
   },
 });

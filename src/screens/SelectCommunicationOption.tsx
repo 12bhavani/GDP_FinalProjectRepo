@@ -14,59 +14,76 @@ const SelectCommunicationOption: React.FC = () => {
   const navigation = useNavigation<any>();
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Header */}
+    <SafeAreaView style={styles.screen}>
       <CustomHeader title="Secure Messages" />
 
-      {/* Main Content */}
       <View style={styles.container}>
-        <Text style={styles.heading}>Who do you want to message?</Text>
+        <View style={styles.card}>
+          <Text style={styles.heading}>Who do you want to message?</Text>
+          <Text style={styles.subheading}>Choose a recipient to continue composing your message.</Text>
 
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() =>
-            navigation.navigate("ComposeMessage", { recipient: "NURSE" })
-          }
-        >
-          <Text style={styles.optionText}>Message Nurse</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.option}
+            onPress={() =>
+              navigation.navigate("ComposeMessage", { recipient: "NURSE" })
+            }
+          >
+            <Text style={styles.optionText}>Message Nurse</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() =>
-            navigation.navigate("ComposeMessage", { recipient: "COUNSELOR" })
-          }
-        >
-          <Text style={styles.optionText}>Message Counselor</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.option}
+            onPress={() =>
+              navigation.navigate("ComposeMessage", { recipient: "COUNSELOR" })
+            }
+          >
+            <Text style={styles.optionText}>Message Counselor</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default SelectCommunicationOption;
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
   container: {
     flex: 1,
-    padding: 20,
+    padding: 16,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 16,
   },
   heading: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "700",
-    marginBottom: 30,
-    textAlign: "center",
+    marginBottom: 6,
+    color: '#0F172A',
+  },
+  subheading: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 18,
   },
   option: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#006747",
     paddingVertical: 14,
-    borderRadius: 8,
-    marginBottom: 15,
+    borderRadius: 10,
+    marginBottom: 12,
+    alignItems: 'center',
   },
   optionText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
-    textAlign: "center",
   },
 });

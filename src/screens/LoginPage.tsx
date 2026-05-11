@@ -1,22 +1,28 @@
 // src/screens/LoginPage.tsx
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import Header from '../components/Header';
+import {
+    HARDCODED_ADMIN_CREDENTIALS,
+    isHardcodedAdminLogin,
+} from '../config/adminCredentials';
+import { RootStackParamList } from '../types/navigation';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../../firebase/config';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 type LoginScreenNavProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -24,6 +30,7 @@ const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const onLogin = async () => {
@@ -35,9 +42,21 @@ const LoginScreen: React.FC = () => {
 
     try {
       setSubmitting(true);
+
+      if (isHardcodedAdminLogin(trimmedEmail, password)) {
+        await signOut(auth).catch(() => undefined);
+        await AsyncStorage.setItem('HARDCODED_ADMIN_V1', 'true');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'AdminDashboard' }],
+        });
+        return;
+      }
+
+      await AsyncStorage.removeItem('HARDCODED_ADMIN_V1').catch(() => undefined);
       await signInWithEmailAndPassword(auth, trimmedEmail, password);
 
-      if (trimmedEmail === 'admin@gmail.com') {
+      if (trimmedEmail === HARDCODED_ADMIN_CREDENTIALS.email) {
         navigation.navigate('AdminDashboard');
       } else {
         navigation.replace('Home');
@@ -65,47 +84,65 @@ const LoginScreen: React.FC = () => {
   const onSignUp = () => navigation.navigate('SignUp');
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+    <View style={styles.screen}>
       <Header title="Login" />
-      <View style={[styles.container, { marginTop: -300 }]}>
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor="#000"
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
 
-        <TextInput
-          placeholder="Password"
-          style={[styles.input, { marginTop: 16 }]}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+          <View style={[styles.passwordContainer, styles.passwordContainerSpaced]}>
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor="#000"
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(prev => !prev)}
+              style={styles.eyeButton}
+              accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={22}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity
-          style={[styles.button, submitting && { opacity: 0.6 }]}
-          onPress={onLogin}
-          disabled={submitting}
-        >
-          {submitting ? <ActivityIndicator /> : <Text style={styles.buttonText}>Login</Text>}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, submitting ? styles.buttonDisabled : null]}
+            onPress={onLogin}
+            disabled={submitting}
+          >
+            {submitting ? <ActivityIndicator /> : <Text style={styles.buttonText}>Login</Text>}
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.linkButton} onPress={onSignUp} disabled={submitting}>
-          <Text style={styles.linkText}>Don&apos;t have an account? Sign Up</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TouchableOpacity style={styles.linkButton} onPress={onSignUp} disabled={submitting}>
+            <Text style={styles.linkText}>Don&apos;t have an account? Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#fff' },
   scrollContainer: { flexGrow: 1, backgroundColor: '#fff' },
-  container: { padding: 20, justifyContent: 'center', flex: 1 },
+  container: { padding: 20, paddingTop: 40, justifyContent: 'flex-start', flex: 1 },
   input: {
     borderWidth: 1,
     borderColor: 'grey',
@@ -113,12 +150,34 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
   },
+  passwordContainer: {
+    borderWidth: 1,
+    borderColor: 'grey',
+    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  passwordContainerSpaced: {
+    marginTop: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  eyeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   button: {
     backgroundColor: '#006747',
     padding: 15,
     borderRadius: 30,
     alignItems: 'center',
     marginTop: 30,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: { color: '#000', fontWeight: '600', fontSize: 16 },
   linkButton: { marginTop: 20, alignItems: 'center' },

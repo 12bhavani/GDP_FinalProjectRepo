@@ -1,8 +1,11 @@
 // src/screens/AdminDashboard.tsx
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { signOut } from 'firebase/auth';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth } from '../../firebase/config';
 import Header from '../components/Header';
 
 export default function AdminDashboard() {
@@ -11,7 +14,7 @@ export default function AdminDashboard() {
 
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
-  }, []);
+  }, [navigation]);
 
 
   const menuOptions = [
@@ -25,10 +28,18 @@ export default function AdminDashboard() {
 
   const handlePress = (item: any) => {
     if (item.logout) {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      (async () => {
+        try {
+          await AsyncStorage.removeItem('HARDCODED_ADMIN_V1').catch(() => undefined);
+          await signOut(auth);
+        } catch (e) {
+          // ignore
+        }
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
+      })();
     } else {
       navigation.navigate(item.screen);
     }

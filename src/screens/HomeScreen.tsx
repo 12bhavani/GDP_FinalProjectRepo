@@ -1,5 +1,6 @@
 // src/screens/HomeScreen.tsx
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -27,11 +28,15 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!uid) return;
+      if (!uid) {
+        return;
+      }
       try {
         const userRef = doc(db, 'users', uid);
         const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) setUserData(docSnap.data());
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
       } catch (err) {
         console.error('Error fetching user data:', err);
       } finally {
@@ -41,7 +46,9 @@ export default function HomeScreen() {
     fetchUserData();
   }, [uid]);
 
-  if (loading) return <ActivityIndicator style={{ marginTop: 40 }} />;
+  if (loading) {
+    return <ActivityIndicator style={styles.loadingSpinner} />;
+  }
 
   // ✅ Menu Options (logout included as a card)
   const menuOptions = [
@@ -61,6 +68,7 @@ export default function HomeScreen() {
   const handlePress = async (item: any) => {
     if (item.action === 'logout') {
       try {
+        await AsyncStorage.removeItem('HARDCODED_ADMIN_V1').catch(() => undefined);
         await signOut(auth);
         navigation.reset({
           index: 0,
@@ -114,6 +122,9 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
+  loadingSpinner: {
+    marginTop: 40,
+  },
   body: { padding: 20 },
   welcome: {
     fontSize: 20,

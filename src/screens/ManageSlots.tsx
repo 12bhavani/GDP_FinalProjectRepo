@@ -6,6 +6,8 @@ import { Calendar } from 'react-native-calendars';
 import { db } from '../../firebase/config';
 import { doc, getDoc, setDoc, deleteField, deleteDoc } from 'firebase/firestore';
 import moment from 'moment';
+import { formatDateToMDY } from '../utils/dateFormat';
+import Header from '../components/Header';
 
 const timeSlots = [
   '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -160,8 +162,10 @@ const ManageSlots = () => {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Manage Available Slots</Text>
+    <View style={styles.screen}>
+      <Header title="Manage Available Slots" />
+
+      <ScrollView contentContainerStyle={styles.container}>
 
       <View style={styles.modeSelector}>
        <TouchableOpacity
@@ -193,64 +197,63 @@ const ManageSlots = () => {
         }}
       />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="purple" />
-      ) : selectedDate ? (
-        <>
-          <Text style={styles.subtitle}>Slots for {selectedDate}</Text>
-          {filteredSlots.length > 0 ? (
-            <View style={styles.slotsGrid}>
-              {filteredSlots.map(slot => (
-                <TouchableOpacity
-                  key={slot}
-                  onPress={() => toggleSlotSelection(slot)}
-                  disabled={isPastSlot(selectedDate, slot)}
-                  style={[styles.slotButton, getSlotStyle(slot)]}
-                >
-                  <Text style={styles.slotText}>{slot}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.infoText}>No slots to show for this mode.</Text>
-          )}
+        {loading ? (
+          <ActivityIndicator size="large" color="purple" />
+        ) : selectedDate ? (
+          <>
+            <Text style={styles.subtitle}>Slots for {formatDateToMDY(selectedDate)}</Text>
+            {filteredSlots.length > 0 ? (
+              <View style={styles.slotsGrid}>
+                {filteredSlots.map(slot => (
+                  <TouchableOpacity
+                    key={slot}
+                    onPress={() => toggleSlotSelection(slot)}
+                    disabled={isPastSlot(selectedDate, slot)}
+                    style={[styles.slotButton, getSlotStyle(slot)]}
+                  >
+                    <Text style={styles.slotText}>{slot}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.infoText}>No slots to show for this mode.</Text>
+            )}
 
-          {mode === 'add' && (
-            <TouchableOpacity style={styles.actionButton} onPress={addSelectedSlots}>
-              <Text style={styles.buttonText}>Add Selected</Text>
-            </TouchableOpacity>
-          )}
+            {mode === 'add' && (
+              <TouchableOpacity style={styles.actionButton} onPress={addSelectedSlots}>
+                <Text style={styles.buttonText}>Add Selected</Text>
+              </TouchableOpacity>
+            )}
 
-          {mode === 'delete' && (
-            <TouchableOpacity
-              style={[styles.actionButton]}
-              onPress={deleteSelectedSlots}
-            >
-              <Text style={styles.buttonText}>Delete Selected</Text>
-            </TouchableOpacity>
-          )}
-        </>
-      ) : (
-        <Text style={styles.infoText}>Select a date to manage time slots</Text>
-      )}
-    </ScrollView>
+            {mode === 'delete' && (
+              <TouchableOpacity
+                style={[styles.actionButton]}
+                onPress={deleteSelectedSlots}
+              >
+                <Text style={styles.buttonText}>Delete Selected</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <Text style={styles.infoText}>Select a date to manage time slots</Text>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
 export default ManageSlots;
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     padding: 20,
     paddingBottom: 40,
     backgroundColor: '#fff',
     flexGrow: 1,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
   },
   subtitle: {
     fontSize: 18,

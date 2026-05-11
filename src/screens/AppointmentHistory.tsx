@@ -1,18 +1,19 @@
 // src/screens/AppointmentHistory.tsx
+import { useNavigation } from '@react-navigation/native';
+import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-  TouchableOpacity,
+    ActivityIndicator,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../../firebase/config';
-import moment from 'moment';
+import { auth, db } from '../../firebase/config';
 import Header from '../components/Header';
-import { useNavigation } from '@react-navigation/native';
+import { formatDateToMDY } from '../utils/dateFormat';
 
 export default function AppointmentHistory() {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -48,6 +49,7 @@ export default function AppointmentHistory() {
                 date,
                 time: slotName,
                 status: detailData.status || 'booked',
+                caseType: detailData.caseType || 'non-emergency',
                 healthIssue: detailData.healthIssue || 'No health issue provided',
                 doctor: detailData.doctor || 'Not assigned',
                 notes: detailData.notes || 'No notes',
@@ -83,83 +85,82 @@ export default function AppointmentHistory() {
     moment(`${app.date} ${app.time}`, 'YYYY-MM-DD hh:mm A').isBefore(now)
   );
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <Header title="Appointment History" />
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  if (appointments.length === 0) {
-    return (
-      <View style={styles.center}>
-        <Header title="Appointment History" />
-        <Text style={styles.empty}>You haven’t had prior appointments.</Text>
-      </View>
-    );
-  }
-
   const renderStatus = (status: string) => {
     const color = status === 'declined' ? 'red' : 'green';
     return <Text style={{ color, fontWeight: '600' }}>Status: {status}</Text>;
   };
 
+  const formatCaseType = (caseType: string) =>
+    caseType === 'emergency' ? 'Emergency' : 'Non-Emergency';
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* ✅ Fixed Header outside scroll area */}
+    <View style={styles.screen}>
       <Header title="Appointment History" />
 
-      {/* ✅ Scroll only the appointment list */}
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
-        {upcoming.length > 0 ? (
-          upcoming.map((app, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.card}
-              onPress={() =>
-                navigation.navigate('AppointmentDetails', { appointment: app })
-              }
-            >
-              <Text style={styles.date}>{app.date}</Text>
-              <Text style={styles.time}>{app.time}</Text>
-              <Text>Health Issue: {app.healthIssue}</Text>
-              {renderStatus(app.status)}
-            </TouchableOpacity>
-          ))
+      <View style={styles.contentArea}>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color="#006747" />
+          </View>
+        ) : appointments.length === 0 ? (
+          <View style={styles.center}>
+            <Text style={styles.empty}>You haven’t had prior appointments.</Text>
+          </View>
         ) : (
-          <Text style={styles.empty}>No upcoming appointments</Text>
-        )}
+          <ScrollView contentContainerStyle={styles.container}>
+            <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
+            {upcoming.length > 0 ? (
+              upcoming.map((app, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.card}
+                  onPress={() =>
+                    navigation.navigate('AppointmentDetails', { appointment: app })
+                  }
+                >
+                  <Text style={styles.date}>{formatDateToMDY(app.date)}</Text>
+                  <Text style={styles.time}>{app.time}</Text>
+                  <Text>Case Type: {formatCaseType(app.caseType)}</Text>
+                  <Text>Health Issue: {app.healthIssue}</Text>
+                  {renderStatus(app.status)}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={styles.empty}>No upcoming appointments</Text>
+            )}
 
-        <Text style={styles.sectionTitle}>Past Appointments</Text>
-        {past.length > 0 ? (
-          past.map((app, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.cardPast}
-              onPress={() =>
-                navigation.navigate('AppointmentDetails', { appointment: app })
-              }
-            >
-              <Text style={styles.date}>{app.date}</Text>
-              <Text style={styles.time}>{app.time}</Text>
-              <Text>Health Issue: {app.healthIssue}</Text>
-              {renderStatus(app.status)}
-            </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={styles.empty}>No past appointments</Text>
+            <Text style={styles.sectionTitle}>Past Appointments</Text>
+            {past.length > 0 ? (
+              past.map((app, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.cardPast}
+                  onPress={() =>
+                    navigation.navigate('AppointmentDetails', { appointment: app })
+                  }
+                >
+                  <Text style={styles.date}>{formatDateToMDY(app.date)}</Text>
+                  <Text style={styles.time}>{app.time}</Text>
+                  <Text>Case Type: {formatCaseType(app.caseType)}</Text>
+                  <Text>Health Issue: {app.healthIssue}</Text>
+                  {renderStatus(app.status)}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text style={styles.empty}>No past appointments</Text>
+            )}
+          </ScrollView>
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: '#fff' },
+  contentArea: { flex: 1 },
   container: { padding: 16, paddingBottom: 30 },
-  center: { flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
